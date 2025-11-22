@@ -6,6 +6,9 @@
 const walletDAL = require('../../DAL/walletDAL');
 const db = require('../../DAL/dbConnection');
 const realtimeNotificationService = require('./realtimeNotificationService');
+const emailService = require('./emailService');
+const userDAL = require('../../DAL/userDAL');
+const billDAL = require('../../DAL/billDAL');
 
 class WalletService {
     /**
@@ -100,6 +103,21 @@ class WalletService {
                 icon: '💰'
             });
 
+            // Send email receipt with PDF attachment
+            try {
+                const user = await userDAL.findById(userId);
+                if (user && user.email) {
+                    await emailService.sendWalletTopUpReceiptEmail(
+                        user.email,
+                        user.full_name,
+                        transaction
+                    );
+                }
+            } catch (emailError) {
+                console.error('Failed to send wallet top-up email:', emailError);
+                // Don't fail the transaction if email fails
+            }
+
             return {
                 success: true,
                 transaction,
@@ -185,6 +203,25 @@ class WalletService {
                 actionUrl: '/wallet/transactions',
                 icon: '✅'
             });
+
+            // Send email receipt with PDF attachment (only for bill payments)
+            if (referenceType === 'bill' && referenceId) {
+                try {
+                    const user = await userDAL.findById(userId);
+                    const bill = await billDAL.findById(referenceId);
+                    if (user && user.email && bill) {
+                        await emailService.sendBillPaymentReceiptEmail(
+                            user.email,
+                            user.full_name,
+                            transaction,
+                            bill
+                        );
+                    }
+                } catch (emailError) {
+                    console.error('Failed to send bill payment email:', emailError);
+                    // Don't fail the transaction if email fails
+                }
+            }
 
             return {
                 success: true,

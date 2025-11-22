@@ -3,6 +3,8 @@ const billDAL = require('../../DAL/billDAL');
 const loyaltyDAL = require('../../DAL/loyaltyDAL');
 const notificationDAL = require('../../DAL/notificationDAL');
 const walletService = require('../services/walletService');
+const emailService = require('../services/emailService');
+const userDAL = require('../../DAL/userDAL');
 
 class PaymentController {
     async createPayment(req, res) {
@@ -82,6 +84,26 @@ class PaymentController {
                 message: `Your payment of $${amount} has been processed. ${pointsToAward > 0 ? `You earned ${pointsToAward} loyalty points!` : ''}`,
                 type: 'payment'
             });
+
+            // Send email receipt with PDF attachment (only for non-wallet payments)
+            // Wallet payments send their own receipts from wallet service
+            if (payment_method !== 'wallet') {
+                try {
+                    const user = await userDAL.findById(bill.user_id);
+                    if (user && user.email) {
+                        const payment = await paymentDAL.findById(paymentId);
+                        await emailService.sendPaymentReceiptEmail(
+                            user.email,
+                            user.full_name,
+                            payment,
+                            bill
+                        );
+                    }
+                } catch (emailError) {
+                    console.error('Failed to send payment receipt email:', emailError);
+                    // Don't fail the payment if email fails
+                }
+            }
 
             res.status(201).json({
                 success: true,

@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const pdfService = require('./pdfService');
 require('dotenv').config();
 
 class EmailService {
@@ -473,6 +474,354 @@ class EmailService {
                             </p>
                             <p style="margin:0;color:#999999;font-size:12px;text-align:center;">
                                 This is an automated message, please do not reply to this email.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+        `;
+    }
+
+    /**
+     * Send payment receipt email with PDF attachment
+     */
+    async sendPaymentReceiptEmail(userEmail, userName, payment, bill) {
+        try {
+            // Generate PDF receipt
+            const pdfBuffer = await pdfService.generatePaymentReceipt(payment, bill, {
+                full_name: userName,
+                email: userEmail
+            });
+
+            const mailOptions = {
+                from: `"PowerShare" <${process.env.SMTP_USER}>`,
+                to: userEmail,
+                subject: `✅ Payment Receipt - $${parseFloat(payment.amount).toFixed(2)}`,
+                html: this.getPaymentReceiptEmailTemplate(userName, payment, bill),
+                attachments: [
+                    {
+                        filename: `payment_receipt_${payment.payment_id}.pdf`,
+                        content: pdfBuffer,
+                        contentType: 'application/pdf'
+                    }
+                ]
+            };
+
+            const info = await this.transporter.sendMail(mailOptions);
+            console.log('✅ Payment receipt email sent:', info.messageId);
+            return { success: true, messageId: info.messageId };
+        } catch (error) {
+            console.error('❌ Error sending payment receipt email:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * Send wallet top-up receipt email with PDF attachment
+     */
+    async sendWalletTopUpReceiptEmail(userEmail, userName, transaction) {
+        try {
+            // Generate PDF receipt
+            const pdfBuffer = await pdfService.generateWalletTopUpReceipt(transaction, {
+                full_name: userName,
+                email: userEmail
+            });
+
+            const mailOptions = {
+                from: `"PowerShare" <${process.env.SMTP_USER}>`,
+                to: userEmail,
+                subject: `💰 Wallet Top-Up Confirmation - ${transaction.amount} ${transaction.currency}`,
+                html: this.getWalletTopUpEmailTemplate(userName, transaction),
+                attachments: [
+                    {
+                        filename: `wallet_topup_${transaction.transaction_id}.pdf`,
+                        content: pdfBuffer,
+                        contentType: 'application/pdf'
+                    }
+                ]
+            };
+
+            const info = await this.transporter.sendMail(mailOptions);
+            console.log('✅ Wallet top-up receipt email sent:', info.messageId);
+            return { success: true, messageId: info.messageId };
+        } catch (error) {
+            console.error('❌ Error sending wallet top-up receipt email:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * Send bill payment receipt email with PDF attachment
+     */
+    async sendBillPaymentReceiptEmail(userEmail, userName, transaction, bill) {
+        try {
+            // Generate PDF receipt
+            const pdfBuffer = await pdfService.generateBillPaymentReceipt(transaction, bill, {
+                full_name: userName,
+                email: userEmail
+            });
+
+            const mailOptions = {
+                from: `"PowerShare" <${process.env.SMTP_USER}>`,
+                to: userEmail,
+                subject: `✅ Bill Payment Confirmation - ${transaction.amount} ${transaction.currency}`,
+                html: this.getBillPaymentEmailTemplate(userName, transaction, bill),
+                attachments: [
+                    {
+                        filename: `bill_payment_${transaction.transaction_id}.pdf`,
+                        content: pdfBuffer,
+                        contentType: 'application/pdf'
+                    }
+                ]
+            };
+
+            const info = await this.transporter.sendMail(mailOptions);
+            console.log('✅ Bill payment receipt email sent:', info.messageId);
+            return { success: true, messageId: info.messageId };
+        } catch (error) {
+            console.error('❌ Error sending bill payment receipt email:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * Email template for payment receipt
+     */
+    getPaymentReceiptEmailTemplate(userName, payment, bill) {
+        return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;font-family:Arial,sans-serif;background-color:#f4f4f4;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f4;padding:20px;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                    <tr>
+                        <td style="background:linear-gradient(135deg, #28a745, #20c997);padding:40px 20px;text-align:center;">
+                            <h1 style="color:#ffffff;margin:0;font-size:28px;">✅ Payment Successful!</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:40px 30px;">
+                            <h2 style="color:#333333;margin:0 0 20px 0;">Hi ${userName},</h2>
+                            <p style="color:#666666;line-height:1.6;margin:0 0 20px 0;">
+                                Thank you for your payment! Your transaction has been processed successfully.
+                            </p>
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8f9fa;border-radius:8px;margin:30px 0;">
+                                <tr>
+                                    <td style="padding:25px;">
+                                        <table width="100%" cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td style="padding:10px 0;">
+                                                    <strong style="color:#666;">Amount Paid:</strong>
+                                                </td>
+                                                <td align="right" style="padding:10px 0;">
+                                                    <span style="color:#28a745;font-size:24px;font-weight:bold;">$${parseFloat(payment.amount).toFixed(2)}</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding:10px 0;border-top:1px solid #e0e0e0;">
+                                                    <strong style="color:#666;">Payment Method:</strong>
+                                                </td>
+                                                <td align="right" style="padding:10px 0;border-top:1px solid #e0e0e0;">
+                                                    <span style="color:#333;">${payment.payment_method}</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding:10px 0;border-top:1px solid #e0e0e0;">
+                                                    <strong style="color:#666;">Receipt #:</strong>
+                                                </td>
+                                                <td align="right" style="padding:10px 0;border-top:1px solid #e0e0e0;">
+                                                    <span style="color:#333;">REC-${payment.payment_id}</span>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            <div style="background-color:#d1ecf1;border-left:4px solid #0c5460;padding:15px;margin:20px 0;border-radius:4px;">
+                                <p style="margin:0;color:#0c5460;font-size:14px;">
+                                    📎 <strong>Receipt Attached:</strong> Your payment receipt is attached to this email as a PDF file.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background-color:#f8f9fa;padding:30px;text-align:center;border-top:1px solid #eeeeee;">
+                            <p style="color:#999999;font-size:12px;margin:0;">
+                                © ${new Date().getFullYear()} PowerShare. All rights reserved.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+        `;
+    }
+
+    /**
+     * Email template for wallet top-up
+     */
+    getWalletTopUpEmailTemplate(userName, transaction) {
+        return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;font-family:Arial,sans-serif;background-color:#f4f4f4;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f4;padding:20px;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                    <tr>
+                        <td style="background:linear-gradient(135deg, #10b981, #059669);padding:40px 20px;text-align:center;">
+                            <h1 style="color:#ffffff;margin:0;font-size:28px;">💰 Wallet Top-Up Successful!</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:40px 30px;">
+                            <h2 style="color:#333333;margin:0 0 20px 0;">Hi ${userName},</h2>
+                            <p style="color:#666666;line-height:1.6;margin:0 0 20px 0;">
+                                Your wallet has been topped up successfully!
+                            </p>
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8f9fa;border-radius:8px;margin:30px 0;">
+                                <tr>
+                                    <td style="padding:25px;">
+                                        <table width="100%" cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td style="padding:10px 0;">
+                                                    <strong style="color:#666;">Amount Added:</strong>
+                                                </td>
+                                                <td align="right" style="padding:10px 0;">
+                                                    <span style="color:#10b981;font-size:24px;font-weight:bold;">${transaction.amount} ${transaction.currency}</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding:10px 0;border-top:1px solid #e0e0e0;">
+                                                    <strong style="color:#666;">New Balance:</strong>
+                                                </td>
+                                                <td align="right" style="padding:10px 0;border-top:1px solid #e0e0e0;">
+                                                    <span style="color:#333;font-weight:bold;">${transaction.balance_after} ${transaction.currency}</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding:10px 0;border-top:1px solid #e0e0e0;">
+                                                    <strong style="color:#666;">Transaction ID:</strong>
+                                                </td>
+                                                <td align="right" style="padding:10px 0;border-top:1px solid #e0e0e0;">
+                                                    <span style="color:#333;">${transaction.transaction_id}</span>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            <div style="background-color:#d1ecf1;border-left:4px solid #0c5460;padding:15px;margin:20px 0;border-radius:4px;">
+                                <p style="margin:0;color:#0c5460;font-size:14px;">
+                                    📎 <strong>Receipt Attached:</strong> Your top-up receipt is attached to this email as a PDF file.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background-color:#f8f9fa;padding:30px;text-align:center;border-top:1px solid #eeeeee;">
+                            <p style="color:#999999;font-size:12px;margin:0;">
+                                © ${new Date().getFullYear()} PowerShare. All rights reserved.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+        `;
+    }
+
+    /**
+     * Email template for bill payment
+     */
+    getBillPaymentEmailTemplate(userName, transaction, bill) {
+        return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;font-family:Arial,sans-serif;background-color:#f4f4f4;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f4;padding:20px;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                    <tr>
+                        <td style="background:linear-gradient(135deg, #6366f1, #8b5cf6);padding:40px 20px;text-align:center;">
+                            <h1 style="color:#ffffff;margin:0;font-size:28px;">✅ Bill Paid Successfully!</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:40px 30px;">
+                            <h2 style="color:#333333;margin:0 0 20px 0;">Hi ${userName},</h2>
+                            <p style="color:#666666;line-height:1.6;margin:0 0 20px 0;">
+                                Your bill has been paid successfully from your wallet!
+                            </p>
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8f9fa;border-radius:8px;margin:30px 0;">
+                                <tr>
+                                    <td style="padding:25px;">
+                                        <table width="100%" cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td style="padding:10px 0;">
+                                                    <strong style="color:#666;">Bill ID:</strong>
+                                                </td>
+                                                <td align="right" style="padding:10px 0;">
+                                                    <span style="color:#333;">#${bill.bill_id}</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding:10px 0;border-top:1px solid #e0e0e0;">
+                                                    <strong style="color:#666;">Amount Paid:</strong>
+                                                </td>
+                                                <td align="right" style="padding:10px 0;border-top:1px solid #e0e0e0;">
+                                                    <span style="color:#6366f1;font-size:24px;font-weight:bold;">${transaction.amount} ${transaction.currency}</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding:10px 0;border-top:1px solid #e0e0e0;">
+                                                    <strong style="color:#666;">Remaining Balance:</strong>
+                                                </td>
+                                                <td align="right" style="padding:10px 0;border-top:1px solid #e0e0e0;">
+                                                    <span style="color:#333;font-weight:bold;">${transaction.balance_after} ${transaction.currency}</span>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            <div style="background-color:#d1ecf1;border-left:4px solid #0c5460;padding:15px;margin:20px 0;border-radius:4px;">
+                                <p style="margin:0;color:#0c5460;font-size:14px;">
+                                    📎 <strong>Receipt Attached:</strong> Your bill payment receipt is attached to this email as a PDF file.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background-color:#f8f9fa;padding:30px;text-align:center;border-top:1px solid #eeeeee;">
+                            <p style="color:#999999;font-size:12px;margin:0;">
+                                © ${new Date().getFullYear()} PowerShare. All rights reserved.
                             </p>
                         </td>
                     </tr>
