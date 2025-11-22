@@ -1,9 +1,9 @@
 const rateLimit = require('express-rate-limit');
 
-// Strict rate limiting for login attempts
+// Relaxed rate limiting for login attempts (suitable for development/university projects)
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // 5 attempts
+    max: 50, // 50 attempts (very generous for testing)
     message: {
         success: false,
         message: 'Too many login attempts from this IP, please try again after 15 minutes.'
@@ -16,7 +16,7 @@ const loginLimiter = rateLimit({
 // Rate limiting for registration
 const registerLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 hour
-    max: 3, // 3 registrations per hour per IP
+    max: 20, // 20 registrations per hour per IP (for testing)
     message: {
         success: false,
         message: 'Too many accounts created from this IP, please try again after an hour.'
@@ -28,7 +28,7 @@ const registerLimiter = rateLimit({
 // Rate limiting for password reset requests
 const passwordResetLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 hour
-    max: 3, // 3 attempts per hour
+    max: 10, // 10 attempts per hour
     message: {
         success: false,
         message: 'Too many password reset attempts, please try again after an hour.'
@@ -37,10 +37,10 @@ const passwordResetLimiter = rateLimit({
     legacyHeaders: false
 });
 
-// Rate limiting for 2FA verification
+// Rate limiting for 2FA verification (relaxed for testing)
 const twoFactorLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10, // 10 attempts
+    max: 100, // 100 attempts (for testing purposes)
     message: {
         success: false,
         message: 'Too many verification attempts, please try again later.'

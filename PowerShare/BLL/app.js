@@ -25,19 +25,13 @@ app.use(helmet({
     }
 }));
 
-// Rate limiting for authentication endpoints
-const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // 5 requests per window
-    message: 'Too many authentication attempts, please try again later.',
-    standardHeaders: true,
-    legacyHeaders: false
-});
+// Relaxed rate limiting for university project/development
+// Note: Tighten these limits for production deployment
 
-// General API rate limiting
+// General API rate limiting (very relaxed for testing)
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // 100 requests per window
+    max: 1000, // 1000 requests per 15 minutes (suitable for demos and testing)
     message: 'Too many requests, please try again later.',
     standardHeaders: true,
     legacyHeaders: false
@@ -55,8 +49,7 @@ app.use(cookieParser());
 
 app.use(express.static(path.join(__dirname, '../PL/public')));
 
-// Make rate limiters available to routes
-app.locals.authLimiter = authLimiter;
+// Make rate limiter available to routes
 app.locals.apiLimiter = apiLimiter;
 
 const apiRoutes = require('./routes/index');
