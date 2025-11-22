@@ -833,6 +833,100 @@ class EmailService {
 </html>
         `;
     }
+
+    /**
+     * Send 2FA OTP code email
+     */
+    async sendTwoFactorCode(userEmail, userName, code) {
+        const mailOptions = {
+            from: `"PowerShare" <${process.env.SMTP_USER}>`,
+            to: userEmail,
+            subject: `🔐 Your PowerShare Verification Code: ${code}`,
+            html: this.getTwoFactorEmailTemplate(userName, code)
+        };
+
+        try {
+            const info = await this.transporter.sendMail(mailOptions);
+            console.log('✅ 2FA code email sent:', info.messageId);
+            return { success: true, messageId: info.messageId };
+        } catch (error) {
+            console.error('❌ Error sending 2FA code email:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * Email template for 2FA code
+     */
+    getTwoFactorEmailTemplate(userName, code) {
+        return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;font-family:Arial,sans-serif;background-color:#f4f4f4;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f4;padding:20px;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                    <tr>
+                        <td style="background:linear-gradient(135deg, #ef4444, #dc2626);padding:40px 20px;text-align:center;">
+                            <h1 style="color:#ffffff;margin:0;font-size:28px;">🔐 Two-Factor Authentication</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:40px 30px;">
+                            <h2 style="color:#333333;margin:0 0 20px 0;">Hi ${userName},</h2>
+                            <p style="color:#666666;line-height:1.6;margin:0 0 20px 0;">
+                                You're attempting to sign in to your PowerShare account. Use the verification code below to complete your login:
+                            </p>
+
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin:30px 0;">
+                                <tr>
+                                    <td align="center" style="padding:30px;background-color:#f8f9fa;border-radius:8px;">
+                                        <div style="font-size:42px;font-weight:bold;letter-spacing:8px;color:#ef4444;font-family:monospace;">
+                                            ${code}
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <div style="background-color:#fff3cd;border-left:4px solid #ffc107;padding:15px;margin:20px 0;border-radius:4px;">
+                                <p style="margin:0 0 10px 0;color:#856404;font-size:14px;">
+                                    <strong>⏱️ This code will expire in 10 minutes</strong>
+                                </p>
+                                <p style="margin:0;color:#856404;font-size:14px;">
+                                    If you didn't request this code, please ignore this email or contact support if you're concerned about your account security.
+                                </p>
+                            </div>
+
+                            <div style="background-color:#f8f9fa;padding:20px;border-radius:8px;margin-top:30px;">
+                                <p style="margin:0;color:#666666;font-size:14px;line-height:1.6;">
+                                    <strong>Security Tip:</strong> Never share this code with anyone. PowerShare will never ask you for your verification code via phone, email, or text message.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background-color:#f8f9fa;padding:30px;text-align:center;border-top:1px solid #eeeeee;">
+                            <p style="color:#999999;font-size:12px;margin:0 0 10px 0;">
+                                This is an automated security message from PowerShare
+                            </p>
+                            <p style="color:#999999;font-size:12px;margin:0;">
+                                © ${new Date().getFullYear()} PowerShare. All rights reserved.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+        `;
+    }
 }
 
 module.exports = new EmailService();
