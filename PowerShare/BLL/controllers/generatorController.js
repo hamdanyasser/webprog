@@ -1,5 +1,6 @@
 const generatorDAL = require('../../DAL/generatorDAL');
 const pricingPlanDAL = require('../../DAL/pricingPlanDAL');
+const capacityService = require('../services/capacityService');
 
 class GeneratorController {
     async createGenerator(req, res) {
@@ -31,9 +32,29 @@ class GeneratorController {
     async getAllGenerators(req, res) {
         try {
             const generators = await generatorDAL.getAllGenerators();
+
+            // Add capacity information to each generator
+            const generatorsWithCapacity = await Promise.all(
+                generators.map(async (generator) => {
+                    const capacity = await capacityService.getGeneratorCapacity(generator.generator_id);
+                    return {
+                        ...generator,
+                        capacity: capacity ? {
+                            maxAmperage: capacity.maxAmperage,
+                            usedAmperage: capacity.usedAmperage,
+                            availableAmperage: capacity.availableAmperage,
+                            capacityPercentage: capacity.capacityPercentage,
+                            activeSubscribers: capacity.activeSubscribers,
+                            status: capacity.status,
+                            canAcceptNew: capacity.canAcceptNew
+                        } : null
+                    };
+                })
+            );
+
             res.json({
                 success: true,
-                data: generators
+                data: generatorsWithCapacity
             });
         } catch (error) {
             console.error('Get generators error:', error);
@@ -56,9 +77,24 @@ class GeneratorController {
                 });
             }
 
+            // Add capacity information
+            const capacity = await capacityService.getGeneratorCapacity(generatorId);
+            const generatorWithCapacity = {
+                ...generator,
+                capacity: capacity ? {
+                    maxAmperage: capacity.maxAmperage,
+                    usedAmperage: capacity.usedAmperage,
+                    availableAmperage: capacity.availableAmperage,
+                    capacityPercentage: capacity.capacityPercentage,
+                    activeSubscribers: capacity.activeSubscribers,
+                    status: capacity.status,
+                    canAcceptNew: capacity.canAcceptNew
+                } : null
+            };
+
             res.json({
                 success: true,
-                data: generator
+                data: generatorWithCapacity
             });
         } catch (error) {
             console.error('Get generator error:', error);
