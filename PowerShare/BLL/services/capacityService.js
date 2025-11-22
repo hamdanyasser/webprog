@@ -1,4 +1,4 @@
-const db = require('../../DAL/db');
+const db = require('../../DAL/dbConnection');
 
 class CapacityService {
     /**
