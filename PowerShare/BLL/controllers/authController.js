@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const userDAL = require('../../DAL/userDAL');
+const emailService = require('../services/emailService');
 
 class AuthController {
     async register(req, res) {
@@ -84,12 +85,34 @@ class AuthController {
                 profile_image
             });
 
-            console.log('User registered successfully:', userId); 
+            console.log('User registered successfully:', userId);
+
+            // Generate email verification token (valid for 24 hours)
+            const verificationToken = jwt.sign(
+                { userId, email, purpose: 'email_verification' },
+                process.env.JWT_SECRET || 'your-secret-key',
+                { expiresIn: '24h' }
+            );
+
+            // Save verification token to database
+            await userDAL.setEmailVerificationToken(userId, verificationToken);
+
+            // Send verification email
+            const emailResult = await emailService.sendVerificationEmail(email, full_name, verificationToken);
+
+            if (emailResult.success) {
+                console.log('✅ Verification email sent to:', email);
+            } else {
+                console.error('❌ Failed to send verification email:', emailResult.error);
+            }
 
             res.status(201).json({
                 success: true,
-                message: 'User registered successfully',
-                data: { userId }
+                message: 'Registration successful! Please check your email to verify your account.',
+                data: {
+                    userId,
+                    emailSent: emailResult.success
+                }
             });
 
         } catch (error) {
@@ -134,6 +157,16 @@ class AuthController {
                 return res.status(401).json({
                     success: false,
                     message: 'Invalid email or password'
+                });
+            }
+
+            // Check if email is verified
+            if (!user.email_verified) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Please verify your email before logging in. Check your inbox for the verification link.',
+                    emailVerified: false,
+                    email: email
                 });
             }
 
@@ -317,6 +350,150 @@ class AuthController {
             res.status(500).json({
                 success: false,
                 message: 'Failed to change password'
+            });
+        }
+    }
+
+    async verifyEmail(req, res) {
+        try {
+            const { token } = req.query;
+
+            if (!token) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Verification token is required'
+                });
+            }
+
+            // Verify JWT token
+            let decoded;
+            try {
+                decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+            } catch (error) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid or expired verification link. Please request a new one.'
+                });
+            }
+
+            // Check if token purpose is email verification
+            if (decoded.purpose !== 'email_verification') {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid verification token'
+                });
+            }
+
+            // Find user by verification token
+            const user = await userDAL.findByVerificationToken(token);
+
+            if (!user) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Invalid verification link or user not found'
+                });
+            }
+
+            // Check if already verified
+            if (user.email_verified) {
+                return res.status(200).json({
+                    success: true,
+                    message: 'Email already verified. You can login now.',
+                    alreadyVerified: true
+                });
+            }
+
+            // Verify the email
+            await userDAL.verifyEmail(user.user_id);
+
+            // Send welcome email
+            await emailService.sendWelcomeEmail(user.email, user.full_name);
+
+            console.log('✅ Email verified for user:', user.email);
+
+            res.json({
+                success: true,
+                message: 'Email verified successfully! You can now login to your account.',
+                user: {
+                    email: user.email,
+                    full_name: user.full_name
+                }
+            });
+
+        } catch (error) {
+            console.error('Email verification error:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Email verification failed. Please try again.'
+            });
+        }
+    }
+
+    async resendVerificationEmail(req, res) {
+        try {
+            const { email } = req.body;
+
+            if (!email) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Email is required'
+                });
+            }
+
+            // Find user by email
+            const user = await userDAL.findByEmail(email);
+
+            if (!user) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'No account found with this email'
+                });
+            }
+
+            // Check if already verified
+            if (user.email_verified) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Email is already verified. You can login now.'
+                });
+            }
+
+            // Generate new verification token
+            const verificationToken = jwt.sign(
+                { userId: user.user_id, email: user.email, purpose: 'email_verification' },
+                process.env.JWT_SECRET || 'your-secret-key',
+                { expiresIn: '24h' }
+            );
+
+            // Update verification token in database
+            await userDAL.setEmailVerificationToken(user.user_id, verificationToken);
+
+            // Send verification email
+            const emailResult = await emailService.sendVerificationEmail(
+                user.email,
+                user.full_name,
+                verificationToken
+            );
+
+            if (!emailResult.success) {
+                return res.status(500).json({
+                    success: false,
+                    message: 'Failed to send verification email. Please try again later.'
+                });
+            }
+
+            console.log('✅ Verification email resent to:', user.email);
+
+            res.json({
+                success: true,
+                message: 'Verification email sent! Please check your inbox.'
+            });
+
+        } catch (error) {
+            console.error('Resend verification error:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to resend verification email'
             });
         }
     }

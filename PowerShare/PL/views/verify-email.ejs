@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('partials/head') %>
+    <title>Email Verification - PowerShare</title>
+    <style>
+        .verification-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .verification-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 60px 40px;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .success-icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #10B981, #059669);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            animation: scaleIn 0.5s ease;
+        }
+
+        .error-icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #EF4444, #DC2626);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            animation: scaleIn 0.5s ease;
+        }
+
+        .success-icon i, .error-icon i {
+            font-size: 50px;
+            color: white;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="verification-container">
+        <div class="verification-card">
+            <!-- Loading State -->
+            <div id="loading-state">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Verifying...</span>
+                </div>
+                <h3 class="mt-4">Verifying your email...</h3>
+                <p class="text-muted">Please wait a moment</p>
+            </div>
+
+            <!-- Success State -->
+            <div id="success-state" style="display: none;">
+                <div class="success-icon">
+                    <i class="fas fa-check"></i>
+                </div>
+                <h2 class="mb-3">Email Verified! 🎉</h2>
+                <p class="text-muted mb-4">Your email has been successfully verified. You can now access all features of PowerShare.</p>
+                <a href="/login" class="btn btn-primary btn-lg">
+                    <i class="fas fa-sign-in-alt"></i> Login to Your Account
+                </a>
+            </div>
+
+            <!-- Error State -->
+            <div id="error-state" style="display: none;">
+                <div class="error-icon">
+                    <i class="fas fa-times"></i>
+                </div>
+                <h2 class="mb-3">Verification Failed</h2>
+                <p class="text-muted mb-4" id="error-message">The verification link is invalid or has expired.</p>
+                <a href="/resend-verification" class="btn btn-primary btn-lg mb-2">
+                    <i class="fas fa-redo"></i> Request New Link
+                </a>
+                <br>
+                <a href="/login" class="btn btn-outline-secondary mt-2">
+                    Back to Login
+                </a>
+            </div>
+
+            <!-- Already Verified State -->
+            <div id="already-verified-state" style="display: none;">
+                <div class="success-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h2 class="mb-3">Already Verified</h2>
+                <p class="text-muted mb-4">Your email is already verified. You can login to your account.</p>
+                <a href="/login" class="btn btn-primary btn-lg">
+                    <i class="fas fa-sign-in-alt"></i> Go to Login
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get token from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+
+        async function verifyEmail() {
+            if (!token) {
+                showError('No verification token provided');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/auth/verify-email?token=${token}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    if (data.alreadyVerified) {
+                        showAlreadyVerified();
+                    } else {
+                        showSuccess();
+                    }
+                } else {
+                    showError(data.message);
+                }
+            } catch (error) {
+                console.error('Verification error:', error);
+                showError('An error occurred during verification. Please try again.');
+            }
+        }
+
+        function showSuccess() {
+            document.getElementById('loading-state').style.display = 'none';
+            document.getElementById('success-state').style.display = 'block';
+        }
+
+        function showError(message) {
+            document.getElementById('loading-state').style.display = 'none';
+            document.getElementById('error-state').style.display = 'block';
+            document.getElementById('error-message').textContent = message;
+        }
+
+        function showAlreadyVerified() {
+            document.getElementById('loading-state').style.display = 'none';
+            document.getElementById('already-verified-state').style.display = 'block';
+        }
+
+        // Start verification on page load
+        verifyEmail();
+    </script>
+</body>
+</html>

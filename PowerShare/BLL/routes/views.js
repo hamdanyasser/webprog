@@ -14,6 +14,14 @@ router.get('/register', (req, res) => {
     res.render('register', { title: 'Register - PowerShare' });
 });
 
+router.get('/verify-email', (req, res) => {
+    res.render('verify-email', { title: 'Verify Email - PowerShare' });
+});
+
+router.get('/resend-verification', (req, res) => {
+    res.render('resend-verification', { title: 'Resend Verification - PowerShare' });
+});
+
 router.get('/dashboard', authenticateView, (req, res) => {
     const role = req.user.role;
 

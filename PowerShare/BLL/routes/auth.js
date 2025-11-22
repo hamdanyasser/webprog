@@ -19,4 +19,8 @@ router.get('/me', authenticate, authController.getCurrentUser);
 router.get('/verify', authenticate, authController.verifyToken);
 router.post('/change-password', authenticate, authController.changePassword);
 
+// Email Verification
+router.get('/verify-email', authController.verifyEmail);
+router.post('/resend-verification', authController.resendVerificationEmail);
+
 module.exports = router;
