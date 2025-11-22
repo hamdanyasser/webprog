@@ -39,11 +39,14 @@ class PaymentController {
             // Handle wallet payment
             if (payment_method === 'wallet') {
                 try {
+                    // Get currency from bill or default to USD
+                    const currency = bill.currency || process.env.DEFAULT_CURRENCY || 'USD';
+
                     // Deduct from wallet
                     await walletService.payFromWallet(
                         bill.user_id,
                         amount,
-                        'USD', // Default currency, could be dynamic
+                        currency,
                         'bill',
                         bill_id,
                         `Bill payment #${bill_id}`
