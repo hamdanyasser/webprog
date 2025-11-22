@@ -1095,24 +1095,35 @@ html {
     padding: 40px 30px;
     border-radius: 20px;
     text-align: center;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: var(--shadow-md);
+    border: 2px solid transparent;
+    overflow: hidden;
+}
+
+.step-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.1), transparent);
+    transition: left 0.5s;
+}
+
+.step-card:hover::before {
+    left: 100%;
 }
 
 .step-card:hover {
-    transform: translateY(-8px);
-    box-shadow: var(--shadow-xl);
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15);
+    border-color: rgba(99, 102, 241, 0.2);
 }
 
-.step-card-featured {
-    background: var(--gradient-primary);
-    color: white;
-    box-shadow: 0 10px 30px rgba(99, 102, 241, 0.25);
-}
-
-.step-card-featured h4,
-.step-card-featured p {
-    color: white;
+.step-card-animated {
+    animation: fadeInUp 0.6s ease-out;
 }
 
 .step-number-modern {
@@ -1127,10 +1138,16 @@ html {
     align-items: center;
     justify-content: center;
     box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
+    transition: all 0.3s ease;
 }
 
-.step-card-featured .step-number-modern {
-    background: white;
+.step-card:hover .step-number-modern {
+    transform: rotate(10deg) scale(1.1);
+    box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
+}
+
+.step-number-pulse {
+    animation: pulse 2s ease-in-out infinite;
 }
 
 .step-number-modern span {
@@ -1139,15 +1156,17 @@ html {
     color: white;
 }
 
-.step-card-featured .step-number-modern span {
-    background: var(--gradient-primary);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
 .step-icon {
     margin-top: 20px;
+    transition: all 0.3s ease;
+}
+
+.step-card:hover .step-icon {
+    transform: scale(1.1);
+}
+
+.icon-float {
+    animation: float 3s ease-in-out infinite;
 }
 
 .step-arrow {
@@ -1155,6 +1174,56 @@ html {
     right: -40px;
     top: 50%;
     transform: translateY(-50%);
+    transition: all 0.3s ease;
+}
+
+.arrow-slide {
+    animation: arrowSlide 1.5s ease-in-out infinite;
+}
+
+.step-card:hover .step-arrow {
+    transform: translateY(-50%) translateX(5px);
+}
+
+/* Keyframe Animations */
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
+    }
+    50% {
+        box-shadow: 0 6px 25px rgba(99, 102, 241, 0.5);
+    }
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes arrowSlide {
+    0%, 100% {
+        transform: translateX(0);
+        opacity: 0.5;
+    }
+    50% {
+        transform: translateX(10px);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .testimonials-section {
@@ -1288,6 +1357,16 @@ html {
     width: 100%;
     height: 100%;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    animation: gradientShift 15s ease infinite;
+}
+
+@keyframes gradientShift {
+    0%, 100% {
+        filter: hue-rotate(0deg) brightness(1);
+    }
+    50% {
+        filter: hue-rotate(10deg) brightness(1.05);
+    }
 }
 
 .cta-overlay {
@@ -1300,24 +1379,154 @@ html {
     opacity: 0.3;
 }
 
+.cta-particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+        radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 40% 80%, rgba(255, 255, 255, 0.06) 0%, transparent 50%);
+    animation: particlesFloat 20s ease-in-out infinite;
+}
+
+@keyframes particlesFloat {
+    0%, 100% {
+        opacity: 0.5;
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        opacity: 0.8;
+        transform: translateY(-20px) scale(1.05);
+    }
+}
+
 .cta-content {
     position: relative;
     z-index: 2;
 }
 
-.cta-icon {
-    animation: bounce 2s infinite;
+/* Heading with glow effect */
+.cta-heading-animated {
+    color: #ffffff !important;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.3), 0 2px 10px rgba(0, 0, 0, 0.2);
+    animation: fadeInScale 0.8s ease-out, subtleGlow 3s ease-in-out infinite;
 }
 
-@keyframes bounce {
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes subtleGlow {
     0%, 100% {
-        transform: translateY(0);
+        text-shadow: 0 0 20px rgba(255, 255, 255, 0.3), 0 2px 10px rgba(0, 0, 0, 0.2);
     }
     50% {
-        transform: translateY(-20px);
+        text-shadow: 0 0 30px rgba(255, 255, 255, 0.5), 0 2px 10px rgba(0, 0, 0, 0.2);
     }
 }
 
+/* Text animation */
+.cta-text-animated {
+    color: #ffffff !important;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    animation: fadeInUp 0.8s ease-out;
+}
+
+/* Buttons animation */
+.cta-buttons-animated {
+    animation: fadeInUp 0.8s ease-out;
+}
+
+/* Trust badge animation */
+.cta-trust-animated {
+    animation: fadeInUp 0.8s ease-out;
+}
+
+/* Rocket icon with enhanced animation */
+.cta-icon-animated {
+    animation: rocketFloat 3s ease-in-out infinite;
+    filter: drop-shadow(0 4px 12px rgba(255, 255, 255, 0.3));
+}
+
+@keyframes rocketFloat {
+    0%, 100% {
+        transform: translateY(0) rotate(-5deg);
+    }
+    25% {
+        transform: translateY(-15px) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-20px) rotate(5deg);
+    }
+    75% {
+        transform: translateY(-15px) rotate(0deg);
+    }
+}
+
+/* Enhanced button styles */
+.cta-btn-primary {
+    background: white !important;
+    color: #764ba2 !important;
+    border: none;
+    font-weight: 600;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    position: relative;
+    overflow: hidden;
+}
+
+.cta-btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(102, 126, 234, 0.15);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.cta-btn-primary:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.cta-btn-primary:hover {
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25), 0 0 20px rgba(255, 255, 255, 0.3);
+    color: #764ba2 !important;
+}
+
+.cta-btn-secondary {
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    color: white !important;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cta-btn-secondary:hover {
+    background: white !important;
+    color: #764ba2 !important;
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 8px 24px rgba(255, 255, 255, 0.4);
+    border-color: white;
+}
+
+/* Legacy button classes for compatibility */
 .cta-modern .btn-light {
     background: white;
     color: var(--primary-dark);

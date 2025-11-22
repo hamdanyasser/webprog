@@ -3,6 +3,7 @@ const router = express.Router();
 const subscriptionDAL = require('../../DAL/subscriptionDAL');
 const userDAL = require('../../DAL/userDAL');
 const generatorDAL = require('../../DAL/generatorDAL');
+const capacityService = require('../services/capacityService');
 const { authenticate, authorize } = require('../middleware/auth');
 const { verifyGeneratorOwnership, verifyOwnerHasGenerator } = require('../middleware/ownershipValidation');
 
@@ -48,6 +49,20 @@ router.post('/subscribe', authenticate, async (req, res) => {
             });
         }
 
+        // Capacity validation
+        const capacityCheck = await capacityService.canSubscribe(plan_id, generator_id);
+        if (!capacityCheck.valid) {
+            return res.status(400).json({
+                success: false,
+                message: capacityCheck.message,
+                capacityInfo: {
+                    available: capacityCheck.availableAmperage,
+                    required: capacityCheck.requiredAmperage,
+                    shortfall: capacityCheck.shortfall
+                }
+            });
+        }
+
         const startDate = new Date().toISOString().split('T')[0];
         const subscriptionId = await subscriptionDAL.createSubscription({
             user_id: userId,
@@ -59,7 +74,8 @@ router.post('/subscribe', authenticate, async (req, res) => {
         res.status(201).json({
             success: true,
             message: 'Subscription created successfully',
-            data: { subscription_id: subscriptionId }
+            data: { subscription_id: subscriptionId },
+            capacityInfo: capacityCheck.afterSubscription
         });
     } catch (error) {
         console.error('Subscribe error:', error);
@@ -150,6 +166,20 @@ router.post('/', authenticate, authorize('owner', 'admin'), async (req, res) => 
 
         const generatorId = generators[0].generator_id;
 
+        // Capacity validation
+        const capacityCheck = await capacityService.canSubscribe(plan_id, generatorId);
+        if (!capacityCheck.valid) {
+            return res.status(400).json({
+                success: false,
+                message: capacityCheck.message,
+                capacityInfo: {
+                    available: capacityCheck.availableAmperage,
+                    required: capacityCheck.requiredAmperage,
+                    shortfall: capacityCheck.shortfall
+                }
+            });
+        }
+
         const subscriptionId = await subscriptionDAL.createSubscription({
             user_id: user.user_id,
             generator_id: generatorId,
@@ -160,7 +190,8 @@ router.post('/', authenticate, authorize('owner', 'admin'), async (req, res) => 
         res.status(201).json({
             success: true,
             message: 'Subscriber added successfully',
-            data: { subscription_id: subscriptionId }
+            data: { subscription_id: subscriptionId },
+            capacityInfo: capacityCheck.afterSubscription
         });
     } catch (error) {
         console.error('Add subscriber error:', error);
@@ -185,7 +216,7 @@ router.put('/:subscriptionId/change-plan', authenticate, async (req, res) => {
         }
 
         const subscription = await subscriptionDAL.findById(subscriptionId);
-        
+
         if (!subscription) {
             return res.status(404).json({
                 success: false,
@@ -200,6 +231,39 @@ router.put('/:subscriptionId/change-plan', authenticate, async (req, res) => {
             });
         }
 
+        // Get current and new plan amperage to check capacity
+        const db = require('../../DAL/db');
+        const [currentPlan] = await db.query('SELECT amperage FROM pricing_plans WHERE plan_id = ?', [subscription.plan_id]);
+        const [newPlan] = await db.query('SELECT amperage FROM pricing_plans WHERE plan_id = ?', [plan_id]);
+
+        if (newPlan.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'New plan not found'
+            });
+        }
+
+        const currentAmperage = currentPlan[0]?.amperage || 0;
+        const newAmperage = newPlan[0].amperage;
+        const amperageDifference = newAmperage - currentAmperage;
+
+        // Only validate if upgrading (increasing amperage)
+        if (amperageDifference > 0) {
+            const capacityCheck = await capacityService.validateCapacity(subscription.generator_id, amperageDifference);
+            if (!capacityCheck.valid) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Cannot upgrade plan. ${capacityCheck.message}`,
+                    capacityInfo: {
+                        currentPlanAmperage: currentAmperage,
+                        newPlanAmperage: newAmperage,
+                        available: capacityCheck.availableAmperage,
+                        shortfall: capacityCheck.shortfall
+                    }
+                });
+            }
+        }
+
         await subscriptionDAL.updateSubscription(subscriptionId, {
             plan_id: plan_id,
             status: subscription.status,
@@ -208,7 +272,12 @@ router.put('/:subscriptionId/change-plan', authenticate, async (req, res) => {
 
         res.json({
             success: true,
-            message: 'Subscription plan updated successfully'
+            message: 'Subscription plan updated successfully',
+            planChange: {
+                from: currentAmperage + 'A',
+                to: newAmperage + 'A',
+                change: (amperageDifference > 0 ? '+' : '') + amperageDifference + 'A'
+            }
         });
     } catch (error) {
         console.error('Change plan error:', error);

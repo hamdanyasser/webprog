@@ -58,8 +58,20 @@ class WalletDAL {
      */
     async getBalance(userId, currency = 'USD') {
         try {
+            // Whitelist map for currency columns
+            const currencyColumns = {
+                'USD': 'balance_usd',
+                'LBP': 'balance_lbp',
+                'EUR': 'balance_eur'
+            };
+
+            const balanceKey = currencyColumns[currency.toUpperCase()];
+
+            if (!balanceKey) {
+                throw new Error(`Unsupported currency: ${currency}`);
+            }
+
             const wallet = await this.getWalletByUserId(userId);
-            const balanceKey = `balance_${currency.toLowerCase()}`;
             return parseFloat(wallet[balanceKey] || 0);
         } catch (error) {
             console.error('Error getting balance:', error);
@@ -75,7 +87,18 @@ class WalletDAL {
      */
     async updateBalance(walletId, currency, newBalance) {
         try {
-            const balanceColumn = `balance_${currency.toLowerCase()}`;
+            // Whitelist map for currency columns (prevents SQL injection)
+            const currencyColumns = {
+                'USD': 'balance_usd',
+                'LBP': 'balance_lbp',
+                'EUR': 'balance_eur'
+            };
+
+            const balanceColumn = currencyColumns[currency.toUpperCase()];
+
+            if (!balanceColumn) {
+                throw new Error(`Unsupported currency: ${currency}`);
+            }
 
             await db.execute(
                 `UPDATE wallets SET ${balanceColumn} = ?, updated_at = NOW() WHERE wallet_id = ?`,

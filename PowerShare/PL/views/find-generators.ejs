@@ -137,7 +137,7 @@
                                 ${generator.status}
                             </span>
                             <span class="text-muted small">
-                                <i class="fas fa-users me-1"></i>${generator.subscriber_count || 0} subscribers
+                                <i class="fas fa-users me-1"></i>${generator.capacity?.activeSubscribers || generator.subscriber_count || 0} subscribers
                             </span>
                         </div>
                     </div>
@@ -152,7 +152,7 @@
                             </div>
                             <div class="detail-item mb-2">
                                 <i class="fas fa-bolt text-warning me-2"></i>
-                                <span class="text-muted">Capacity: ${generator.capacity_kw} kW</span>
+                                <span class="text-muted">Capacity: ${generator.capacity_kw} kW (${generator.capacity?.maxAmperage || 0}A)</span>
                             </div>
                             ${generator.owner_name ? `
                             <div class="detail-item mb-2">
@@ -161,9 +161,39 @@
                             </div>
                             ` : ''}
                         </div>
+                        ${generator.capacity ? `
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <small class="text-muted fw-semibold">Capacity Usage</small>
+                                <small class="text-muted">
+                                    <span class="badge bg-${getCapacityColor(generator.capacity.status)} rounded-pill">
+                                        ${generator.capacity.capacityPercentage.toFixed(0)}%
+                                    </span>
+                                </small>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-${getCapacityColor(generator.capacity.status)}"
+                                     role="progressbar"
+                                     style="width: ${generator.capacity.capacityPercentage}%"
+                                     aria-valuenow="${generator.capacity.capacityPercentage}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100">
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between mt-1">
+                                <small class="text-muted">${generator.capacity.usedAmperage}A used</small>
+                                <small class="text-${generator.capacity.canAcceptNew ? 'success' : 'danger'} fw-semibold">
+                                    ${generator.capacity.availableAmperage}A available
+                                </small>
+                            </div>
+                        </div>
+                        ` : ''}
                         ${generator.status === 'active' ? `
-                            <button class="btn btn-primary w-100" onclick="openSubscribeModal(${generator.generator_id})" ${hasActiveSubscription ? 'disabled' : ''}>
-                                <i class="fas fa-plus me-2"></i>Subscribe Now
+                            <button class="btn btn-primary w-100"
+                                    onclick="openSubscribeModal(${generator.generator_id})"
+                                    ${!generator.capacity?.canAcceptNew || hasActiveSubscription ? 'disabled' : ''}>
+                                <i class="fas fa-${generator.capacity?.canAcceptNew ? 'plus' : 'ban'} me-2"></i>
+                                ${generator.capacity?.canAcceptNew ? 'Subscribe Now' : 'At Capacity'}
                             </button>
                         ` : `
                             <button class="btn btn-secondary w-100" disabled>
@@ -304,6 +334,16 @@
             'active': 'success',
             'inactive': 'secondary',
             'maintenance': 'warning'
+        };
+        return colors[status] || 'secondary';
+    }
+
+    function getCapacityColor(status) {
+        const colors = {
+            'good': 'success',
+            'moderate': 'info',
+            'warning': 'warning',
+            'critical': 'danger'
         };
         return colors[status] || 'secondary';
     }
