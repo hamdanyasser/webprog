@@ -9,9 +9,12 @@ const paymentRoutes = require('./payments');
 const paymentMethodRoutes = require('./paymentMethods');
 const scheduleRoutes = require('./schedules');
 const notificationRoutes = require('./notifications');
+const notificationPreferencesRoutes = require('./notificationPreferences');
 const subscriptionRoutes = require('./subscriptions');
 const pricingPlanRoutes = require('./pricingPlans');
 const adminRoutes = require('./admin');
+const loyaltyRoutes = require('./loyalty');
+const walletRoutes = require('./wallet');
 
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
@@ -21,8 +24,11 @@ router.use('/payments', paymentRoutes);
 router.use('/payment-methods', paymentMethodRoutes);
 router.use('/schedules', scheduleRoutes);
 router.use('/notifications', notificationRoutes);
+router.use('/notification-preferences', notificationPreferencesRoutes);
 router.use('/subscriptions', subscriptionRoutes);
 router.use('/pricing-plans', pricingPlanRoutes);
 router.use('/admin', adminRoutes);
+router.use('/loyalty', loyaltyRoutes);
+router.use('/wallet', walletRoutes);
 
 module.exports = router;

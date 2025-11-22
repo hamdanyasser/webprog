@@ -87,6 +87,36 @@ class UserDAL {
             [email_notifications, outage_alerts, sms_notifications, theme, userId]
         );
     }
+
+    async setEmailVerificationToken(userId, token) {
+        await db.execute(
+            'UPDATE users SET email_verification_token = ?, email_verification_sent_at = NOW() WHERE user_id = ?',
+            [token, userId]
+        );
+    }
+
+    async findByVerificationToken(token) {
+        const [rows] = await db.execute(
+            'SELECT * FROM users WHERE email_verification_token = ?',
+            [token]
+        );
+        return rows[0];
+    }
+
+    async verifyEmail(userId) {
+        await db.execute(
+            'UPDATE users SET email_verified = TRUE, email_verification_token = NULL, email_verification_sent_at = NULL WHERE user_id = ?',
+            [userId]
+        );
+    }
+
+    async isEmailVerified(email) {
+        const [rows] = await db.execute(
+            'SELECT email_verified FROM users WHERE email = ?',
+            [email]
+        );
+        return rows[0]?.email_verified || false;
+    }
 }
 
 module.exports = new UserDAL();

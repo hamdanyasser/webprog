@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .transactions-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .transactions-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .transactions-header h1 {
+            margin: 0 0 10px 0;
+            font-size: 32px;
+        }
+
+        .transactions-header p {
+            margin: 0;
+            opacity: 0.9;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .filters-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .filter-btn.primary:hover {
+            background: #5568d3;
+        }
+
+        .filter-btn.secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .filter-btn.secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .export-btn {
+            background: #28a745;
+            color: white;
+        }
+
+        .export-btn:hover {
+            background: #218838;
+        }
+
+        .transactions-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .transactions-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .transactions-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .transactions-table th {
+            background: #f9f9f9;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .transactions-table td {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .transactions-table tr:hover {
+            background: #f9f9f9;
+        }
+
+        .transaction-type {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .transaction-type.topup {
+            background: #d4edda;
+            color: #28a745;
+        }
+
+        .transaction-type.payment {
+            background: #fff3cd;
+            color: #ffc107;
+        }
+
+        .transaction-type.transfer_out {
+            background: #f8d7da;
+            color: #dc3545;
+        }
+
+        .transaction-type.transfer_in {
+            background: #d1ecf1;
+            color: #17a2b8;
+        }
+
+        .transaction-type.refund {
+            background: #d4edda;
+            color: #28a745;
+        }
+
+        .transaction-type.bonus,
+        .transaction-type.cashback,
+        .transaction-type.points_conversion {
+            background: #e7d4ff;
+            color: #6f42c1;
+        }
+
+        .amount-positive {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .amount-negative {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .status-badge.completed {
+            background: #d4edda;
+            color: #28a745;
+        }
+
+        .status-badge.pending {
+            background: #fff3cd;
+            color: #ffc107;
+        }
+
+        .status-badge.failed {
+            background: #f8d7da;
+            color: #dc3545;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            padding: 8px 16px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination .page-info {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state .icon {
+            font-size: 64px;
+            margin-bottom: 15px;
+            opacity: 0.3;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .transactions-table {
+                font-size: 14px;
+            }
+
+            .transactions-table th,
+            .transactions-table td {
+                padding: 10px 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <%- include('partials/navbar') %>
+    <%- include('partials/notification-center') %>
+
+    <div class="transactions-container">
+        <a href="/wallet" class="back-link">← Back to Wallet</a>
+
+        <!-- Header -->
+        <div class="transactions-header">
+            <h1>📊 Transaction History</h1>
+            <p>View and filter all your wallet transactions</p>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-card">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label for="filterType">Transaction Type</label>
+                    <select id="filterType">
+                        <option value="">All Types</option>
+                        <option value="topup">Top Up</option>
+                        <option value="payment">Payment</option>
+                        <option value="transfer_in">Transfer In</option>
+                        <option value="transfer_out">Transfer Out</option>
+                        <option value="refund">Refund</option>
+                        <option value="bonus">Bonus</option>
+                        <option value="cashback">Cashback</option>
+                        <option value="points_conversion">Points Conversion</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="filterStatus">Status</label>
+                    <select id="filterStatus">
+                        <option value="">All Statuses</option>
+                        <option value="completed">Completed</option>
+                        <option value="pending">Pending</option>
+                        <option value="failed">Failed</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="filterCurrency">Currency</label>
+                    <select id="filterCurrency">
+                        <option value="">All Currencies</option>
+                        <option value="USD">USD</option>
+                        <option value="LBP">LBP</option>
+                        <option value="EUR">EUR</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="filterDateFrom">Date From</label>
+                    <input type="date" id="filterDateFrom">
+                </div>
+
+                <div class="filter-group">
+                    <label for="filterDateTo">Date To</label>
+                    <input type="date" id="filterDateTo">
+                </div>
+            </div>
+
+            <div class="filter-actions">
+                <button class="filter-btn secondary" onclick="resetFilters()">Reset</button>
+                <button class="filter-btn export-btn" onclick="exportTransactions()">📥 Export CSV</button>
+                <button class="filter-btn primary" onclick="applyFilters()">Apply Filters</button>
+            </div>
+        </div>
+
+        <!-- Transactions Table -->
+        <div class="transactions-card">
+            <div class="transactions-header-row">
+                <h2>Transactions</h2>
+                <div id="totalCount"></div>
+            </div>
+
+            <div id="transactionsContent">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading transactions...</p>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="pagination" style="display: none;">
+                <button id="prevPage" onclick="changePage(-1)">← Previous</button>
+                <span class="page-info" id="pageInfo">Page 1 of 1</span>
+                <button id="nextPage" onclick="changePage(1)">Next →</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let totalPages = 1;
+        let currentFilters = {};
+
+        // Load transactions
+        async function loadTransactions() {
+            try {
+                const params = new URLSearchParams({
+                    page: currentPage,
+                    limit: 20,
+                    ...currentFilters
+                });
+
+                const response = await fetch(`/api/wallet/transactions?${params}`, {
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayTransactions(data.data.transactions);
+                    updatePagination(data.data.pagination);
+                }
+            } catch (error) {
+                console.error('Error loading transactions:', error);
+                document.getElementById('transactionsContent').innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">❌</div>
+                        <p>Failed to load transactions. Please try again.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function displayTransactions(transactions) {
+            const container = document.getElementById('transactionsContent');
+
+            if (!transactions || transactions.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <p>No transactions found</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const typeIcons = {
+                topup: '💰',
+                payment: '💳',
+                transfer_in: '⬅️',
+                transfer_out: '➡️',
+                refund: '💵',
+                bonus: '🎁',
+                cashback: '💸',
+                points_conversion: '⭐',
+                withdrawal: '🏧',
+                adjustment: '⚙️'
+            };
+
+            container.innerHTML = `
+                <table class="transactions-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th>Balance</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${transactions.map(t => {
+                            const isPositive = ['topup', 'transfer_in', 'refund', 'bonus', 'cashback', 'points_conversion'].includes(t.type);
+                            const date = new Date(t.created_at).toLocaleString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+
+                            return `
+                                <tr>
+                                    <td>${date}</td>
+                                    <td>
+                                        <span class="transaction-type ${t.type}">
+                                            ${typeIcons[t.type] || '📊'} ${t.type.replace(/_/g, ' ')}
+                                        </span>
+                                    </td>
+                                    <td>${t.description || '-'}</td>
+                                    <td class="${isPositive ? 'amount-positive' : 'amount-negative'}">
+                                        ${isPositive ? '+' : '-'}${t.amount} ${t.currency}
+                                    </td>
+                                    <td>${parseFloat(t.balance_after).toFixed(2)} ${t.currency}</td>
+                                    <td>
+                                        <span class="status-badge ${t.status}">
+                                            ${t.status}
+                                        </span>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function updatePagination(pagination) {
+            totalPages = pagination.totalPages;
+            currentPage = pagination.page;
+
+            document.getElementById('totalCount').textContent = `${pagination.total} transactions`;
+            document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+
+            document.getElementById('prevPage').disabled = currentPage === 1;
+            document.getElementById('nextPage').disabled = currentPage === totalPages;
+
+            document.getElementById('pagination').style.display = totalPages > 1 ? 'flex' : 'none';
+        }
+
+        function changePage(delta) {
+            currentPage += delta;
+            loadTransactions();
+        }
+
+        function applyFilters() {
+            currentFilters = {};
+
+            const type = document.getElementById('filterType').value;
+            if (type) currentFilters.type = type;
+
+            const status = document.getElementById('filterStatus').value;
+            if (status) currentFilters.status = status;
+
+            const currency = document.getElementById('filterCurrency').value;
+            if (currency) currentFilters.currency = currency;
+
+            const dateFrom = document.getElementById('filterDateFrom').value;
+            if (dateFrom) currentFilters.dateFrom = dateFrom;
+
+            const dateTo = document.getElementById('filterDateTo').value;
+            if (dateTo) currentFilters.dateTo = dateTo;
+
+            currentPage = 1;
+            loadTransactions();
+        }
+
+        function resetFilters() {
+            document.getElementById('filterType').value = '';
+            document.getElementById('filterStatus').value = '';
+            document.getElementById('filterCurrency').value = '';
+            document.getElementById('filterDateFrom').value = '';
+            document.getElementById('filterDateTo').value = '';
+
+            currentFilters = {};
+            currentPage = 1;
+            loadTransactions();
+        }
+
+        function exportTransactions() {
+            const params = new URLSearchParams(currentFilters);
+            window.location.href = `/api/wallet/transactions/export?${params}`;
+        }
+
+        // Load transactions on page load
+        document.addEventListener('DOMContentLoaded', loadTransactions);
+    </script>
+</body>
+</html>

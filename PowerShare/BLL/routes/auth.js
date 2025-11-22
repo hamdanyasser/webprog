@@ -19,4 +19,15 @@ router.get('/me', authenticate, authController.getCurrentUser);
 router.get('/verify', authenticate, authController.verifyToken);
 router.post('/change-password', authenticate, authController.changePassword);
 
+// Email Verification
+router.get('/verify-email', authController.verifyEmail);
+router.post('/resend-verification', authController.resendVerificationEmail);
+
+// Two-Factor Authentication
+router.post('/2fa/verify', authController.verifyTwoFactor);
+router.post('/2fa/verify-backup', authController.verifyBackupCode);
+router.post('/2fa/enable', authenticate, authController.enableTwoFactor);
+router.post('/2fa/disable', authenticate, authController.disableTwoFactor);
+router.get('/2fa/status', authenticate, authController.getTwoFactorStatus);
+
 module.exports = router;

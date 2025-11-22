@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('partials/head') %>
+    <title>Notifications Dashboard - PowerShare</title>
+    <link rel="stylesheet" href="/css/notifications.css">
+    <style>
+        .stats-card {
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+        }
+        .stats-card h3 {
+            font-size: 36px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .stats-card p {
+            margin: 0;
+            opacity: 0.9;
+        }
+        .filter-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .notification-card {
+            border-left: 4px solid #007bff;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+        .notification-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .notification-card.unread {
+            background-color: #e7f3ff;
+            border-left-color: #007bff;
+        }
+        .notification-card.read {
+            opacity: 0.8;
+            border-left-color: #6c757d;
+        }
+        .type-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .timeline-group {
+            margin-bottom: 30px;
+        }
+        .timeline-date {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #007bff;
+        }
+    </style>
+</head>
+<body>
+    <%- include('partials/navbar') %>
+
+    <div class="container my-5">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h2 mb-0">📊 Notifications Dashboard</h1>
+                <p class="text-muted">Manage all your notifications in one place</p>
+            </div>
+            <div>
+                <a href="/notification-preferences" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-cog"></i> Preferences
+                </a>
+                <button class="btn btn-success" onclick="exportToCSV()">
+                    <i class="fas fa-download"></i> Export CSV
+                </button>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4" id="stats-container">
+            <div class="col-md-3">
+                <div class="stats-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <p>Total Notifications</p>
+                    <h3 id="stat-total">0</h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <p>Unread</p>
+                    <h3 id="stat-unread">0</h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                    <p>Read</p>
+                    <h3 id="stat-read">0</h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                    <p>Avg Response Time</p>
+                    <h3 id="stat-response">0m</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-section">
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Search</label>
+                    <input type="text" class="form-control" id="filter-search" placeholder="Search notifications...">
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">Type</label>
+                    <select class="form-select" id="filter-type">
+                        <option value="all">All Types</option>
+                        <option value="bill">Bills</option>
+                        <option value="payment">Payments</option>
+                        <option value="outage">Outages</option>
+                        <option value="loyalty">Loyalty</option>
+                        <option value="subscription">Subscriptions</option>
+                        <option value="reminder">Reminders</option>
+                        <option value="system">System</option>
+                        <option value="alert">Alerts</option>
+                        <option value="welcome">Welcome</option>
+                    </select>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" id="filter-status">
+                        <option value="all">All</option>
+                        <option value="unread">Unread</option>
+                        <option value="read">Read</option>
+                    </select>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">Date From</label>
+                    <input type="date" class="form-control" id="filter-date-from">
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">Date To</label>
+                    <input type="date" class="form-control" id="filter-date-to">
+                </div>
+                <div class="col-md-1 mb-3">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-primary w-100" onclick="applyFilters()">
+                        <i class="fas fa-filter"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bulk Actions -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <button class="btn btn-sm btn-outline-primary" onclick="selectAll()">
+                    <i class="fas fa-check-double"></i> Select All
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="deselectAll()">
+                    <i class="fas fa-times"></i> Deselect All
+                </button>
+            </div>
+            <div>
+                <button class="btn btn-sm btn-success" onclick="bulkMarkAsRead()" id="bulk-read-btn" disabled>
+                    <i class="fas fa-check"></i> Mark Read (<span id="selected-count">0</span>)
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="bulkDelete()" id="bulk-delete-btn" disabled>
+                    <i class="fas fa-trash"></i> Delete (<span id="selected-count-delete">0</span>)
+                </button>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-sm btn-outline-danger dropdown-toggle" data-bs-toggle="dropdown">
+                        Quick Delete
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" onclick="quickDelete('read')">Delete All Read</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="quickDelete('old')">Delete Old (30+ days)</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- View Toggle -->
+        <div class="btn-group mb-3" role="group">
+            <button type="button" class="btn btn-sm btn-outline-primary active" id="view-list" onclick="switchView('list')">
+                <i class="fas fa-list"></i> List
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-primary" id="view-timeline" onclick="switchView('timeline')">
+                <i class="fas fa-calendar-alt"></i> Timeline
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-primary" id="view-grouped" onclick="switchView('grouped')">
+                <i class="fas fa-layer-group"></i> Grouped
+            </button>
+        </div>
+
+        <!-- Notifications List -->
+        <div id="notifications-container">
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3 text-muted">Loading notifications...</p>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-container" id="pagination-container"></div>
+    </div>
+
+    <%- include('partials/footer') %>
+
+    <script>
+        let currentPage = 1;
+        let currentView = 'list';
+        let selectedNotifications = new Set();
+        let currentFilters = {
+            search: '',
+            type: 'all',
+            status: 'all',
+            dateFrom: '',
+            dateTo: ''
+        };
+
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStatistics();
+            loadNotifications();
+        });
+
+        // Load statistics
+        async function loadStatistics() {
+            try {
+                const response = await fetch('/api/notifications/statistics', {
+                    credentials: 'include'
+                });
+
+                if (!response.ok) throw new Error('Failed to load statistics');
+
+                const data = await response.json();
+                const stats = data.data;
+
+                document.getElementById('stat-total').textContent = stats.overall.total || 0;
+                document.getElementById('stat-unread').textContent = stats.overall.unread || 0;
+                document.getElementById('stat-read').textContent = stats.overall.read || 0;
+                document.getElementById('stat-response').textContent = Math.round(stats.avgResponseTime) + 'm';
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+            }
+        }
+
+        // Load notifications
+        async function loadNotifications() {
+            try {
+                const params = new URLSearchParams({
+                    page: currentPage,
+                    limit: 20,
+                    ...currentFilters
+                });
+
+                const response = await fetch(`/api/notifications/advanced?${params}`, {
+                    credentials: 'include'
+                });
+
+                if (!response.ok) throw new Error('Failed to load notifications');
+
+                const data = await response.json();
+
+                if (currentView === 'list') {
+                    renderListView(data.data.notifications, data.data.pagination);
+                } else if (currentView === 'timeline') {
+                    await renderTimelineView();
+                } else if (currentView === 'grouped') {
+                    await renderGroupedView();
+                }
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+                document.getElementById('notifications-container').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle"></i> Failed to load notifications
+                    </div>
+                `;
+            }
+        }
+
+        // Render list view
+        function renderListView(notifications, pagination) {
+            const container = document.getElementById('notifications-container');
+
+            if (notifications.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No notifications found</p>
+                    </div>
+                `;
+                document.getElementById('pagination-container').innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = notifications.map(n => `
+                <div class="card notification-card ${n.is_read ? 'read' : 'unread'}">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start">
+                            <input type="checkbox" class="form-check-input me-3 mt-1"
+                                   onchange="toggleSelection(${n.notification_id})"
+                                   ${selectedNotifications.has(n.notification_id) ? 'checked' : ''}>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h6 class="mb-1">${n.icon || '🔔'} ${n.title}</h6>
+                                        <span class="type-badge bg-${getTypeColor(n.type)}">${n.type}</span>
+                                    </div>
+                                    <small class="text-muted">${formatTime(n.created_at)}</small>
+                                </div>
+                                <p class="mb-2">${n.message}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        ${n.action_url ? `<a href="${n.action_url}" class="btn btn-sm btn-primary">View Details</a>` : ''}
+                                    </div>
+                                    <div>
+                                        ${!n.is_read ? `<button class="btn btn-sm btn-outline-success" onclick="markAsRead(${n.notification_id})">Mark Read</button>` : ''}
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteNotification(${n.notification_id})">Delete</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            renderPagination(pagination);
+        }
+
+        // Render timeline view
+        async function renderTimelineView() {
+            try {
+                const params = new URLSearchParams({ groupBy: 'date', limit: 100 });
+                const response = await fetch(`/api/notifications/grouped?${params}`, {
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+                const grouped = data.data;
+
+                const container = document.getElementById('notifications-container');
+                container.innerHTML = grouped.map(group => `
+                    <div class="timeline-group">
+                        <h5 class="timeline-date">
+                            <i class="fas fa-calendar-day"></i> ${formatDate(group.group_key)}
+                            <span class="badge bg-primary ms-2">${group.count} notifications</span>
+                            ${group.unread_count > 0 ? `<span class="badge bg-danger ms-1">${group.unread_count} unread</span>` : ''}
+                        </h5>
+                        ${group.notifications.map(n => `
+                            <div class="card notification-card ${n.is_read ? 'read' : 'unread'} mb-2">
+                                <div class="card-body py-2">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>${n.icon || '🔔'} ${n.title}</strong>
+                                            <span class="type-badge bg-${getTypeColor(n.type)} ms-2">${n.type}</span>
+                                        </div>
+                                        <small class="text-muted">${formatTime(n.created_at)}</small>
+                                    </div>
+                                    <p class="mb-0 mt-1">${n.message}</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `).join('');
+
+                document.getElementById('pagination-container').innerHTML = '';
+            } catch (error) {
+                console.error('Error loading timeline:', error);
+            }
+        }
+
+        // Render grouped view
+        async function renderGroupedView() {
+            try {
+                const params = new URLSearchParams({ groupBy: 'type', limit: 100 });
+                const response = await fetch(`/api/notifications/grouped?${params}`, {
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+                const grouped = data.data;
+
+                const container = document.getElementById('notifications-container');
+                container.innerHTML = grouped.map(group => `
+                    <div class="timeline-group">
+                        <h5 class="timeline-date">
+                            ${getTypeIcon(group.group_key)} ${group.group_key.toUpperCase()}
+                            <span class="badge bg-primary ms-2">${group.count} notifications</span>
+                            ${group.unread_count > 0 ? `<span class="badge bg-danger ms-1">${group.unread_count} unread</span>` : ''}
+                        </h5>
+                        ${group.notifications.slice(0, 5).map(n => `
+                            <div class="card notification-card ${n.is_read ? 'read' : 'unread'} mb-2">
+                                <div class="card-body py-2">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <strong>${n.icon || '🔔'} ${n.title}</strong>
+                                        <small class="text-muted">${formatTime(n.created_at)}</small>
+                                    </div>
+                                    <p class="mb-0 mt-1">${n.message}</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                        ${group.notifications.length > 5 ? `<p class="text-muted text-center">... and ${group.notifications.length - 5} more</p>` : ''}
+                    </div>
+                `).join('');
+
+                document.getElementById('pagination-container').innerHTML = '';
+            } catch (error) {
+                console.error('Error loading grouped view:', error);
+            }
+        }
+
+        // Render pagination
+        function renderPagination(pagination) {
+            if (!pagination || pagination.totalPages <= 1) {
+                document.getElementById('pagination-container').innerHTML = '';
+                return;
+            }
+
+            const container = document.getElementById('pagination-container');
+            let html = '';
+
+            // Previous button
+            html += `<button class="btn btn-sm btn-outline-primary" ${pagination.page === 1 ? 'disabled' : ''}
+                            onclick="changePage(${pagination.page - 1})">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </button>`;
+
+            // Page numbers
+            const maxPages = 5;
+            let startPage = Math.max(1, pagination.page - Math.floor(maxPages / 2));
+            let endPage = Math.min(pagination.totalPages, startPage + maxPages - 1);
+
+            if (endPage - startPage < maxPages - 1) {
+                startPage = Math.max(1, endPage - maxPages + 1);
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<button class="btn btn-sm ${i === pagination.page ? 'btn-primary' : 'btn-outline-primary'}"
+                                onclick="changePage(${i})">${i}</button>`;
+            }
+
+            // Next button
+            html += `<button class="btn btn-sm btn-outline-primary" ${pagination.page === pagination.totalPages ? 'disabled' : ''}
+                            onclick="changePage(${pagination.page + 1})">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </button>`;
+
+            // Page info
+            html += `<span class="text-muted">Page ${pagination.page} of ${pagination.totalPages} (${pagination.total} total)</span>`;
+
+            container.innerHTML = html;
+        }
+
+        // Change page
+        function changePage(page) {
+            currentPage = page;
+            loadNotifications();
+        }
+
+        // Apply filters
+        function applyFilters() {
+            currentFilters = {
+                search: document.getElementById('filter-search').value,
+                type: document.getElementById('filter-type').value,
+                status: document.getElementById('filter-status').value,
+                dateFrom: document.getElementById('filter-date-from').value,
+                dateTo: document.getElementById('filter-date-to').value
+            };
+            currentPage = 1;
+            loadNotifications();
+        }
+
+        // Switch view
+        function switchView(view) {
+            currentView = view;
+            document.querySelectorAll('[id^="view-"]').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`view-${view}`).classList.add('active');
+            loadNotifications();
+        }
+
+        // Selection management
+        function toggleSelection(id) {
+            if (selectedNotifications.has(id)) {
+                selectedNotifications.delete(id);
+            } else {
+                selectedNotifications.add(id);
+            }
+            updateSelectionUI();
+        }
+
+        function selectAll() {
+            document.querySelectorAll('.notification-card input[type="checkbox"]').forEach(cb => {
+                cb.checked = true;
+                const id = parseInt(cb.getAttribute('onchange').match(/\d+/)[0]);
+                selectedNotifications.add(id);
+            });
+            updateSelectionUI();
+        }
+
+        function deselectAll() {
+            document.querySelectorAll('.notification-card input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+            });
+            selectedNotifications.clear();
+            updateSelectionUI();
+        }
+
+        function updateSelectionUI() {
+            const count = selectedNotifications.size;
+            document.getElementById('selected-count').textContent = count;
+            document.getElementById('selected-count-delete').textContent = count;
+            document.getElementById('bulk-read-btn').disabled = count === 0;
+            document.getElementById('bulk-delete-btn').disabled = count === 0;
+        }
+
+        // Bulk actions
+        async function bulkMarkAsRead() {
+            if (selectedNotifications.size === 0) return;
+
+            try {
+                const response = await fetch('/api/notifications/bulk/mark-read', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        notificationIds: Array.from(selectedNotifications)
+                    }),
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    selectedNotifications.clear();
+                    loadStatistics();
+                    loadNotifications();
+                }
+            } catch (error) {
+                console.error('Error marking as read:', error);
+                alert('Failed to mark notifications as read');
+            }
+        }
+
+        async function bulkDelete() {
+            if (selectedNotifications.size === 0) return;
+
+            if (!confirm(`Delete ${selectedNotifications.size} notifications?`)) return;
+
+            try {
+                const response = await fetch('/api/notifications/bulk/delete', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        notificationIds: Array.from(selectedNotifications)
+                    }),
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    selectedNotifications.clear();
+                    loadStatistics();
+                    loadNotifications();
+                }
+            } catch (error) {
+                console.error('Error deleting notifications:', error);
+                alert('Failed to delete notifications');
+            }
+        }
+
+        async function quickDelete(type) {
+            const messages = {
+                read: 'Delete all read notifications?',
+                old: 'Delete notifications older than 30 days?'
+            };
+
+            if (!confirm(messages[type])) return;
+
+            try {
+                const response = await fetch('/api/notifications/bulk/delete', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ deleteType: type }),
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    loadStatistics();
+                    loadNotifications();
+                }
+            } catch (error) {
+                console.error('Error deleting notifications:', error);
+                alert('Failed to delete notifications');
+            }
+        }
+
+        // Individual actions
+        async function markAsRead(id) {
+            try {
+                await fetch(`/api/notifications/${id}/read`, {
+                    method: 'PUT',
+                    credentials: 'include'
+                });
+                loadStatistics();
+                loadNotifications();
+            } catch (error) {
+                console.error('Error marking as read:', error);
+            }
+        }
+
+        async function deleteNotification(id) {
+            if (!confirm('Delete this notification?')) return;
+
+            try {
+                await fetch(`/api/notifications/${id}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+                loadStatistics();
+                loadNotifications();
+            } catch (error) {
+                console.error('Error deleting notification:', error);
+            }
+        }
+
+        // Export to CSV
+        function exportToCSV() {
+            const params = new URLSearchParams(currentFilters);
+            window.location.href = `/api/notifications/export?${params}`;
+        }
+
+        // Helper functions
+        function getTypeColor(type) {
+            const colors = {
+                bill: 'primary',
+                payment: 'success',
+                outage: 'warning',
+                loyalty: 'info',
+                subscription: 'secondary',
+                reminder: 'danger',
+                system: 'dark',
+                alert: 'danger',
+                welcome: 'success'
+            };
+            return colors[type] || 'secondary';
+        }
+
+        function getTypeIcon(type) {
+            const icons = {
+                bill: '💵',
+                payment: '✅',
+                outage: '⚡',
+                loyalty: '⭐',
+                subscription: '📦',
+                reminder: '⏰',
+                system: 'ℹ️',
+                alert: '🔔',
+                welcome: '👋'
+            };
+            return icons[type] || '🔔';
+        }
+
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
+
+            if (seconds < 60) return 'Just now';
+            if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+            if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+            if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+
+            return date.toLocaleDateString();
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            if (date.toDateString() === today.toDateString()) return 'Today';
+            if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+
+            return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        }
+    </script>
+</body>
+</html>
