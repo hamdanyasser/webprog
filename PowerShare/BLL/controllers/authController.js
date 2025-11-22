@@ -173,14 +173,14 @@ class AuthController {
             const token = jwt.sign(
                 { userId: user.user_id, email: user.email, role: user.role },
                 process.env.JWT_SECRET || 'your-secret-key',
-                { expiresIn: '7d' }
+                { expiresIn: '2h' }  // Session expires after 2 hours
             );
 
             res.cookie('token', token, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
                 sameSite: 'lax',
-                maxAge: 7 * 24 * 60 * 60 * 1000, 
+                maxAge: 2 * 60 * 60 * 1000,  // 2 hours in milliseconds
             });
 
             delete user.password_hash;
