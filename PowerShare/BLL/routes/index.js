@@ -14,6 +14,7 @@ const subscriptionRoutes = require('./subscriptions');
 const pricingPlanRoutes = require('./pricingPlans');
 const adminRoutes = require('./admin');
 const loyaltyRoutes = require('./loyalty');
+const walletRoutes = require('./wallet');
 
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
@@ -28,5 +29,6 @@ router.use('/subscriptions', subscriptionRoutes);
 router.use('/pricing-plans', pricingPlanRoutes);
 router.use('/admin', adminRoutes);
 router.use('/loyalty', loyaltyRoutes);
+router.use('/wallet', walletRoutes);
 
 module.exports = router;

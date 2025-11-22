@@ -2,6 +2,7 @@ const paymentDAL = require('../../DAL/paymentDAL');
 const billDAL = require('../../DAL/billDAL');
 const loyaltyDAL = require('../../DAL/loyaltyDAL');
 const notificationDAL = require('../../DAL/notificationDAL');
+const walletService = require('../services/walletService');
 
 class PaymentController {
     async createPayment(req, res) {
@@ -32,6 +33,26 @@ class PaymentController {
             }
 
             const transaction_id = `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+            // Handle wallet payment
+            if (payment_method === 'wallet') {
+                try {
+                    // Deduct from wallet
+                    await walletService.payFromWallet(
+                        bill.user_id,
+                        amount,
+                        'USD', // Default currency, could be dynamic
+                        'bill',
+                        bill_id,
+                        `Bill payment #${bill_id}`
+                    );
+                } catch (walletError) {
+                    return res.status(400).json({
+                        success: false,
+                        message: walletError.message || 'Insufficient wallet balance'
+                    });
+                }
+            }
 
             // Create payment
             const paymentId = await paymentDAL.createPayment({

@@ -14,8 +14,10 @@
 
 const cron = require('node-cron');
 const billingService = require('../BLL/services/billingService');
+const walletDAL = require('../DAL/walletDAL');
+const realtimeNotificationService = require('../BLL/services/realtimeNotificationService');
 
-console.log('⚙️  Setting up automated billing cron jobs...');
+console.log('⚙️  Setting up automated cron jobs...');
 
 /**
  * Job 1: Monthly Bill Generation
@@ -176,13 +178,60 @@ const paymentReminderJob = cron.schedule('0 10 * * *', async () => {
     timezone: "Asia/Beirut"
 });
 
+/**
+ * Job 4: Low Balance Wallet Check
+ * Runs at 9:00 AM every day
+ * Cron: "0 9 * * *" = minute 0, hour 9, every day
+ */
+const lowBalanceCheckJob = cron.schedule('0 9 * * *', async () => {
+    console.log('💰 LOW BALANCE CHECK JOB TRIGGERED');
+
+    try {
+        const lowBalanceWallets = await walletDAL.getLowBalanceWallets();
+
+        let sent = 0;
+
+        for (const wallet of lowBalanceWallets) {
+            try {
+                // Send low balance notification
+                await realtimeNotificationService.sendNotification({
+                    userId: wallet.user_id,
+                    title: '⚠️ Low Wallet Balance',
+                    message: `Your wallet balance is low ($${wallet.balance_usd}). Please top up to avoid payment issues.`,
+                    type: 'alert',
+                    actionUrl: '/wallet/topup',
+                    icon: '⚠️'
+                });
+
+                // Update last alert timestamp
+                await walletDAL.updateLowBalanceAlert(wallet.wallet_id);
+
+                sent++;
+
+            } catch (error) {
+                console.error(`Failed to send low balance alert for wallet ${wallet.wallet_id}:`, error.message);
+            }
+        }
+
+        console.log(`✅ Sent ${sent} low balance alerts (${lowBalanceWallets.length} wallets below threshold)`);
+
+    } catch (error) {
+        console.error('❌ Low balance check job failed:', error);
+    }
+}, {
+    scheduled: true,
+    timezone: "Asia/Beirut"
+});
+
 console.log('✅ Cron jobs initialized:');
 console.log('   📅 Monthly Billing: 2:00 AM on 1st of each month');
 console.log('   🔍 Overdue Check: 3:00 AM daily');
 console.log('   📧 Payment Reminders: 10:00 AM daily');
+console.log('   💰 Low Balance Check: 9:00 AM daily');
 
 module.exports = {
     monthlyBillingJob,
     overdueCheckJob,
-    paymentReminderJob
+    paymentReminderJob,
+    lowBalanceCheckJob
 };

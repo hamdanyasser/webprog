@@ -106,6 +106,27 @@ router.get('/loyalty-rewards', authenticateView, (req, res) => {
     });
 });
 
+router.get('/wallet', authenticateView, (req, res) => {
+    res.render('wallet-dashboard', {
+        title: 'My Wallet - PowerShare',
+        user: req.user
+    });
+});
+
+router.get('/wallet/topup', authenticateView, (req, res) => {
+    res.render('wallet-topup', {
+        title: 'Top Up Wallet - PowerShare',
+        user: req.user
+    });
+});
+
+router.get('/wallet/transactions', authenticateView, (req, res) => {
+    res.render('wallet-transactions', {
+        title: 'Transaction History - PowerShare',
+        user: req.user
+    });
+});
+
 router.get('/logout', (req, res) => {
     res.clearCookie('token', {
         httpOnly: true,
