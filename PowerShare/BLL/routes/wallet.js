@@ -9,6 +9,7 @@ router.get('/summary', authenticate, walletController.getSummary);
 router.get('/transactions', authenticate, walletController.getTransactions);
 router.get('/transactions/export', authenticate, walletController.exportTransactions);
 router.get('/statistics', authenticate, walletController.getStatistics);
+router.get('/analytics', authenticate, walletController.getAnalytics);
 router.get('/topup-methods', authenticate, walletController.getTopUpMethods);
 
 // Wallet operations

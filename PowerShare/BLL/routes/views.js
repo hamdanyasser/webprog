@@ -127,6 +127,13 @@ router.get('/wallet/transactions', authenticateView, (req, res) => {
     });
 });
 
+router.get('/wallet/analytics', authenticateView, (req, res) => {
+    res.render('wallet-analytics', {
+        title: 'Spending Analytics - PowerShare',
+        user: req.user
+    });
+});
+
 router.get('/logout', (req, res) => {
     res.clearCookie('token', {
         httpOnly: true,

@@ -267,6 +267,29 @@ class WalletController {
     }
 
     /**
+     * Get analytics data for charts
+     */
+    async getAnalytics(req, res) {
+        try {
+            const userId = req.user.user_id;
+            const { period = '30' } = req.query; // days
+
+            const analytics = await walletService.getAnalytics(userId, parseInt(period));
+
+            res.json({
+                success: true,
+                data: analytics
+            });
+        } catch (error) {
+            console.error('Get analytics error:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to fetch analytics'
+            });
+        }
+    }
+
+    /**
      * Get top-up methods
      */
     async getTopUpMethods(req, res) {

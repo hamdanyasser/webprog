@@ -716,6 +716,127 @@ class WalletService {
             throw error;
         }
     }
+
+    /**
+     * Get analytics data for charts
+     * @param {number} userId - User ID
+     * @param {number} period - Period in days (7, 30, 90, 365)
+     * @returns {object} - Analytics data
+     */
+    async getAnalytics(userId, period = 30) {
+        try {
+            const wallet = await walletDAL.getWalletByUserId(userId);
+
+            // Get transactions for period
+            const [transactions] = await db.execute(
+                `SELECT
+                    DATE(created_at) as date,
+                    type,
+                    SUM(amount) as total_amount,
+                    COUNT(*) as count
+                 FROM wallet_transactions
+                 WHERE user_id = ?
+                 AND status = 'completed'
+                 AND created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
+                 GROUP BY DATE(created_at), type
+                 ORDER BY date ASC`,
+                [userId, period]
+            );
+
+            // Get spending by category (transaction type)
+            const [spendingByType] = await db.execute(
+                `SELECT
+                    type,
+                    SUM(amount) as total,
+                    COUNT(*) as count,
+                    currency
+                 FROM wallet_transactions
+                 WHERE user_id = ?
+                 AND status = 'completed'
+                 AND created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
+                 GROUP BY type, currency
+                 ORDER BY total DESC`,
+                [userId, period]
+            );
+
+            // Get daily balance trend
+            const [balanceTrend] = await db.execute(
+                `SELECT
+                    DATE(created_at) as date,
+                    balance_after as balance,
+                    currency
+                 FROM wallet_transactions
+                 WHERE user_id = ?
+                 AND status = 'completed'
+                 AND created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
+                 AND currency = ?
+                 ORDER BY created_at ASC`,
+                [userId, period, wallet.default_currency]
+            );
+
+            // Get monthly comparison
+            const [monthlyComparison] = await db.execute(
+                `SELECT
+                    MONTH(created_at) as month,
+                    YEAR(created_at) as year,
+                    type,
+                    SUM(amount) as total
+                 FROM wallet_transactions
+                 WHERE user_id = ?
+                 AND status = 'completed'
+                 AND created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+                 GROUP BY YEAR(created_at), MONTH(created_at), type
+                 ORDER BY year DESC, month DESC`,
+                [userId]
+            );
+
+            // Get top spending days
+            const [topSpendingDays] = await db.execute(
+                `SELECT
+                    DATE(created_at) as date,
+                    SUM(CASE WHEN type IN ('payment', 'transfer_out') THEN amount ELSE 0 END) as spending
+                 FROM wallet_transactions
+                 WHERE user_id = ?
+                 AND status = 'completed'
+                 AND created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
+                 GROUP BY DATE(created_at)
+                 ORDER BY spending DESC
+                 LIMIT 5`,
+                [userId, period]
+            );
+
+            // Format data for charts
+            return {
+                period,
+                wallet: {
+                    balance_usd: parseFloat(wallet.balance_usd),
+                    balance_lbp: parseFloat(wallet.balance_lbp),
+                    balance_eur: parseFloat(wallet.balance_eur),
+                    default_currency: wallet.default_currency
+                },
+                dailyTransactions: transactions,
+                spendingByType: spendingByType.map(row => ({
+                    ...row,
+                    total: parseFloat(row.total)
+                })),
+                balanceTrend: balanceTrend.map(row => ({
+                    ...row,
+                    balance: parseFloat(row.balance)
+                })),
+                monthlyComparison: monthlyComparison.map(row => ({
+                    ...row,
+                    total: parseFloat(row.total)
+                })),
+                topSpendingDays: topSpendingDays.map(row => ({
+                    ...row,
+                    spending: parseFloat(row.spending)
+                }))
+            };
+        } catch (error) {
+            console.error('Error getting analytics:', error);
+            throw error;
+        }
+    }
 }
 
 module.exports = new WalletService();
