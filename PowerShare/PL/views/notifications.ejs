@@ -1,0 +1,368 @@
+<%- include('partials/head') %>
+<%- include('partials/dashboard-navbar', { dashboardTitle: '', navbarClass: 'bg-primary' }) %>
+
+<div class="container-fluid">
+    <div class="row">
+        <%- include('partials/sidebar-user', { activePage: 'notifications' }) %>
+
+        <div class="col-md-9 col-lg-10 px-4 py-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold mb-1">
+                        <i class="fas fa-bell text-warning me-2"></i>Notifications
+                    </h2>
+                    <p class="text-muted mb-0">Stay updated with all your alerts and messages</p>
+                </div>
+                <div>
+                    <button class="btn btn-outline-primary me-2" onclick="markAllAsRead()">
+                        <i class="fas fa-check-double me-2"></i>Mark All Read
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="clearAll()">
+                        <i class="fas fa-trash me-2"></i>Clear All
+                    </button>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm bg-warning bg-opacity-10 border-start border-warning border-4">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <p class="text-muted mb-1 small">Unread</p>
+                                    <h3 class="fw-bold mb-0" id="unreadCount">0</h3>
+                                </div>
+                                <div>
+                                    <i class="fas fa-envelope fa-2x text-warning"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <p class="text-muted mb-1 small">Total Today</p>
+                                    <h3 class="fw-bold mb-0" id="todayCount">0</h3>
+                                </div>
+                                <div>
+                                    <i class="fas fa-calendar-day fa-2x text-primary"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <p class="text-muted mb-1 small">This Week</p>
+                                    <h3 class="fw-bold mb-0" id="weekCount">0</h3>
+                                </div>
+                                <div>
+                                    <i class="fas fa-calendar-week fa-2x text-info"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <ul class="nav nav-pills" id="notificationTabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#" onclick="filterNotifications('all', event)">
+                                All <span class="badge bg-primary ms-1" id="allCount">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="filterNotifications('unread', event)">
+                                Unread <span class="badge bg-warning ms-1" id="unreadBadge">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="filterNotifications('outage', event)">
+                                <i class="fas fa-bolt me-1"></i>Outages
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="filterNotifications('bill', event)">
+                                <i class="fas fa-file-invoice me-1"></i>Bills
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="filterNotifications('payment', event)">
+                                <i class="fas fa-credit-card me-1"></i>Payments
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="filterNotifications('system', event)">
+                                <i class="fas fa-cog me-1"></i>System
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="notifications-container" id="notificationsContainer">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="text-muted mt-2">Loading notifications...</p>
+                </div>
+            </div>
+
+            <div class="text-center py-5 d-none" id="emptyState">
+                <i class="fas fa-bell-slash fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">No Notifications</h4>
+                <p class="text-muted">You're all caught up!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let allNotifications = [];
+
+    document.addEventListener('DOMContentLoaded', async function() {
+        await loadNotifications();
+    });
+
+    async function loadNotifications() {
+        try {
+            const response = await fetch('/api/notifications?limit=50');
+            const data = await response.json();
+
+            if (data.success) {
+                allNotifications = data.data;
+                displayNotifications(allNotifications);
+                updateNotificationStats(allNotifications);
+            }
+
+        } catch (error) {
+            console.error('Load notifications error:', error);
+            document.getElementById('notificationsContainer').innerHTML =
+                '<p class="text-center text-danger py-4">Failed to load notifications</p>';
+        }
+    }
+
+    function displayNotifications(notifications) {
+        const container = document.getElementById('notificationsContainer');
+        const emptyState = document.getElementById('emptyState');
+
+        if (!notifications || notifications.length === 0) {
+            container.classList.add('d-none');
+            emptyState.classList.remove('d-none');
+            return;
+        }
+
+        container.classList.remove('d-none');
+        emptyState.classList.add('d-none');
+
+        container.innerHTML = notifications.map(notif => `
+        <div class="notification-item mb-3 ${notif.is_read ? '' : 'unread'}" data-id="${notif.notification_id}" data-type="${notif.type}" data-read="${notif.is_read}">
+            <div class="card border-0 shadow-sm ${notif.is_read ? 'bg-light' : 'border-start border-' + getNotifColor(notif.type) + ' border-4'}">
+                <div class="card-body">
+                    <div class="d-flex">
+                        <div class="notification-icon bg-${getNotifColor(notif.type)}-light me-3">
+                            <i class="fas fa-${getNotifIcon(notif.type)} text-${getNotifColor(notif.type)}"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="fw-bold mb-1">${notif.title}</h6>
+                                <div>
+                                    ${!notif.is_read ? '<span class="badge bg-warning me-2">New</span>' : ''}
+                                    <small class="text-muted">${formatTimeAgo(notif.created_at)}</small>
+                                </div>
+                            </div>
+                            <p class="text-muted mb-2">${notif.message}</p>
+                            <div class="notification-actions">
+                                ${getNotificationActions(notif)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+    }
+
+    function updateNotificationStats(notifications) {
+        const unread = notifications.filter(n => !n.is_read);
+        const today = notifications.filter(n => isToday(n.created_at));
+        const thisWeek = notifications.filter(n => isThisWeek(n.created_at));
+
+        document.getElementById('unreadCount').textContent = unread.length;
+        document.getElementById('unreadBadge').textContent = unread.length;
+        document.getElementById('todayCount').textContent = today.length;
+        document.getElementById('weekCount').textContent = thisWeek.length;
+        document.getElementById('allCount').textContent = notifications.length;
+    }
+
+    function filterNotifications(filter, event) {
+        if (event) {
+            event.preventDefault();
+
+            document.querySelectorAll('#notificationTabs .nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        let filtered = allNotifications;
+
+        if (filter === 'unread') {
+            filtered = allNotifications.filter(n => !n.is_read);
+        } else if (filter !== 'all') {
+            filtered = allNotifications.filter(n => n.type === filter);
+        }
+
+        displayNotifications(filtered);
+    }
+
+    async function markAsRead(notificationId) {
+        try {
+            const response = await fetch(`/api/notifications/${notificationId}/read`, {
+                method: 'PUT'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                await loadNotifications();
+            }
+        } catch (error) {
+            console.error('Mark as read error:', error);
+        }
+    }
+
+    async function markAllAsRead() {
+        if (!confirm('Mark all notifications as read?')) return;
+
+        try {
+            const response = await fetch('/api/notifications/read-all', {
+                method: 'PUT'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('All notifications marked as read');
+                await loadNotifications();
+            }
+        } catch (error) {
+            console.error('Mark all as read error:', error);
+        }
+    }
+
+    async function clearAll() {
+        if (!confirm('Are you sure you want to clear all notifications? This cannot be undone.')) return;
+
+        try {
+            const response = await fetch('/api/notifications/all', {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('All notifications cleared successfully');
+                await loadNotifications();
+            } else {
+                alert('Failed to clear notifications: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Clear all notifications error:', error);
+            alert('Failed to clear notifications. Please try again.');
+        }
+    }
+
+    function getNotifColor(type) {
+        const colors = {
+            'outage': 'warning',
+            'bill': 'info',
+            'payment': 'success',
+            'system': 'primary'
+        };
+        return colors[type] || 'secondary';
+    }
+
+    function getNotifIcon(type) {
+        const icons = {
+            'outage': 'exclamation-triangle',
+            'bill': 'file-invoice-dollar',
+            'payment': 'check-circle',
+            'system': 'info-circle'
+        };
+        return icons[type] || 'bell';
+    }
+
+    function getNotificationActions(notif) {
+        let actions = '';
+
+        if (notif.type === 'outage') {
+            actions += '<a href="/outage-schedule" class="btn btn-sm btn-outline-primary me-2"><i class="fas fa-calendar me-1"></i>View Schedule</a>';
+        } else if (notif.type === 'bill') {
+            actions += '<a href="/billing" class="btn btn-sm btn-primary me-2"><i class="fas fa-eye me-1"></i>View Bill</a>';
+            actions += '<a href="/billing" class="btn btn-sm btn-success me-2"><i class="fas fa-credit-card me-1"></i>Pay Now</a>';
+        }
+
+        if (!notif.is_read) {
+            actions += `<button class="btn btn-sm btn-outline-secondary me-2" onclick="markAsRead(${notif.notification_id})"><i class="fas fa-check me-1"></i>Mark Read</button>`;
+        }
+
+        actions += `<button class="btn btn-sm btn-outline-danger" onclick="deleteNotification(${notif.notification_id})"><i class="fas fa-trash me-1"></i>Delete</button>`;
+
+        return actions;
+    }
+
+    function formatTimeAgo(dateString) {
+        const seconds = Math.floor((new Date() - new Date(dateString)) / 1000);
+
+        if (seconds < 60) return 'Just now';
+        if (seconds < 3600) return Math.floor(seconds / 60) + ' minutes ago';
+        if (seconds < 86400) return Math.floor(seconds / 3600) + ' hours ago';
+        return Math.floor(seconds / 86400) + ' days ago';
+    }
+
+    function isToday(dateString) {
+        const date = new Date(dateString);
+        const today = new Date();
+        return date.toDateString() === today.toDateString();
+    }
+
+    function isThisWeek(dateString) {
+        const date = new Date(dateString);
+        const today = new Date();
+        const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+        return date >= weekAgo;
+    }
+
+    async function deleteNotification(notificationId) {
+        if (!confirm('Delete this notification?')) return;
+
+        try {
+            const response = await fetch(`/api/notifications/${notificationId}`, {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                await loadNotifications();
+            } else {
+                alert('Failed to delete notification: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Delete notification error:', error);
+            alert('Failed to delete notification. Please try again.');
+        }
+    }
+</script>
+
+<%- include('partials/footer') %>

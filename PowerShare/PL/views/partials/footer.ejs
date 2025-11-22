@@ -1,0 +1,164 @@
+<footer class="footer-modern">
+    <div class="footer-divider"></div>
+    <div class="container py-5">
+        <div class="row g-4">
+            <div class="col-md-4 mb-3">
+                <h5 class="fw-bold mb-3 footer-brand">
+                    <i class="fas fa-bolt text-warning"></i> PowerShare
+                </h5>
+                <p class="footer-text mb-4">
+                    Smart generator subscription and electricity schedule management for Lebanon.
+                </p>
+                <div class="social-links">
+                    <a href="#" class="social-icon" aria-label="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="social-icon" aria-label="Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="social-icon" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="#" class="social-icon" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <h6 class="fw-bold mb-3 footer-heading">Quick Links</h6>
+                <ul class="list-unstyled footer-links">
+                    <li><a href="/#features" class="footer-link">Features</a></li>
+                    <li><a href="/#how-it-works" class="footer-link">How It Works</a></li>
+                    <li><a href="/#pricing" class="footer-link">Pricing</a></li>
+                    <li><a href="/login" class="footer-link">Login</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2 mb-3">
+                <h6 class="fw-bold mb-3 footer-heading">Support</h6>
+                <ul class="list-unstyled footer-links">
+                    <li><a href="#" class="footer-link">Help Center</a></li>
+                    <li><a href="#" class="footer-link">Privacy Policy</a></li>
+                    <li><a href="#" class="footer-link">Terms of Service</a></li>
+                    <li><a href="#" class="footer-link">FAQ</a></li>
+                </ul>
+            </div>
+            <div class="col-md-3 mb-3">
+                <h6 class="fw-bold mb-3 footer-heading">Contact Us</h6>
+                <ul class="list-unstyled footer-contact">
+                    <li>
+                        <i class="fas fa-envelope me-2"></i>
+                        <a href="mailto:info@powershare.lb" class="footer-link">info@powershare.lb</a>
+                    </li>
+                    <li>
+                        <i class="fas fa-phone me-2"></i>
+                        <a href="tel:+9611234567" class="footer-link">+961 1 234 567</a>
+                    </li>
+                    <li>
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        <span class="footer-text">Beirut, Lebanon</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <hr class="footer-hr my-4">
+        <div class="row align-items-center">
+            <div class="col-md-6 text-center text-md-start">
+                <p class="footer-copyright mb-0">
+                    &copy; <%= new Date().getFullYear() %> PowerShare. All rights reserved.
+                </p>
+            </div>
+            <div class="col-md-6 text-center text-md-end">
+                <span class="footer-badge">
+                    <i class="fas fa-shield-alt me-1"></i> Secure & Encrypted
+                </span>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="/js/script.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/pdf-utils.js"></script>
+
+<script>
+    (async function() {
+        function applyTheme(theme) {
+            const body = document.body;
+            const html = document.documentElement;
+
+            if (theme === 'dark') {
+                body.classList.add('dark-mode');
+                html.classList.add('dark-mode');
+                body.classList.remove('bg-light');
+            } else {
+                body.classList.remove('dark-mode');
+                html.classList.remove('dark-mode');
+                if (!body.classList.contains('bg-light')) {
+                    body.classList.add('bg-light');
+                }
+            }
+
+            localStorage.setItem('theme', theme);
+        }
+
+        async function loadThemeFromDatabase() {
+            try {
+                const response = await fetch('/api/users/settings/notifications', {
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success && result.data && result.data.theme) {
+                        applyTheme(result.data.theme);
+                    }
+                } else {
+                    const savedTheme = localStorage.getItem('theme') || 'light';
+                    applyTheme(savedTheme);
+                }
+            } catch (error) {
+                const savedTheme = localStorage.getItem('theme') || 'light';
+                applyTheme(savedTheme);
+            }
+        }
+
+        const isPublicPage = window.location.pathname === '/login' ||
+                            window.location.pathname === '/register' ||
+                            window.location.pathname === '/';
+
+        if (isPublicPage) {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            applyTheme(savedTheme);
+        } else {
+            await loadThemeFromDatabase();
+        }
+
+        if (document.documentElement.classList.contains('dark-mode-loading')) {
+            document.documentElement.classList.remove('dark-mode-loading');
+            applyTheme('dark');
+        }
+    })();
+
+    window.applyTheme = function(theme) {
+        const body = document.body;
+        const html = document.documentElement;
+
+        if (theme === 'dark') {
+            body.classList.add('dark-mode');
+            html.classList.add('dark-mode');
+            body.classList.remove('bg-light');
+        } else {
+            body.classList.remove('dark-mode');
+            html.classList.remove('dark-mode');
+            if (!body.classList.contains('bg-light')) {
+                body.classList.add('bg-light');
+            }
+        }
+
+        localStorage.setItem('theme', theme);
+    };
+</script>
+</body>
+</html>

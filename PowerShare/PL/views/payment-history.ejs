@@ -1,0 +1,368 @@
+<%- include('partials/head') %>
+<%- include('partials/dashboard-navbar', { dashboardTitle: '', navbarClass: 'bg-primary' }) %>
+
+<div class="container-fluid">
+    <div class="row">
+        <%- include('partials/sidebar-user', { activePage: 'payments' }) %>
+
+        <div class="col-md-9 col-lg-10 px-4 py-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold mb-1">
+                        <i class="fas fa-history text-info me-2"></i>Payment History
+                    </h2>
+                    <p class="text-muted mb-0">View all your past transactions and receipts</p>
+                </div>
+                <div>
+                    <button class="btn btn-outline-primary me-2">
+                        <i class="fas fa-filter me-2"></i>Filter
+                    </button>
+                    <button class="btn btn-primary" onclick="exportPayments()">
+                        <i class="fas fa-download me-2"></i>Export
+                    </button>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="text-muted mb-1 small">Total Paid (2025)</p>
+                                    <h4 class="fw-bold mb-0" id="totalPaidYear">$0.00</h4>
+                                </div>
+                                <div class="stat-icon bg-success-light">
+                                    <i class="fas fa-dollar-sign text-success"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="text-muted mb-1 small">Transactions</p>
+                                    <h4 class="fw-bold mb-0" id="totalTransactions">0</h4>
+                                </div>
+                                <div class="stat-icon bg-info-light">
+                                    <i class="fas fa-receipt text-info"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="text-muted mb-1 small">Last Payment</p>
+                                    <h4 class="fw-bold mb-0" id="lastPaymentDate">--</h4>
+                                </div>
+                                <div class="stat-icon bg-primary-light">
+                                    <i class="fas fa-calendar text-primary"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="text-muted mb-1 small">Avg. Payment</p>
+                                    <h4 class="fw-bold mb-0" id="avgPayment">$0.00</h4>
+                                </div>
+                                <div class="stat-icon bg-warning-light">
+                                    <i class="fas fa-chart-line text-warning"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label small">Year</label>
+                            <select class="form-select" id="yearFilter" onchange="filterPayments()">
+                                <option value="all">All Years</option>
+                                <option value="2025" selected>2025</option>
+                                <option value="2024">2024</option>
+                                <option value="2023">2023</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small">Status</label>
+                            <select class="form-select" id="statusFilter" onchange="filterPayments()">
+                                <option value="all">All Status</option>
+                                <option value="completed" selected>Completed</option>
+                                <option value="pending">Pending</option>
+                                <option value="failed">Failed</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small">Method</label>
+                            <select class="form-select" id="methodFilter" onchange="filterPayments()">
+                                <option value="all">All Methods</option>
+                                <option value="card">Card</option>
+                                <option value="cash">Cash</option>
+                                <option value="bank_transfer">Bank Transfer</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+                                <i class="fas fa-redo me-2"></i>Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-list me-2"></i>Transaction History
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Invoice #</th>
+                                <th>Description</th>
+                                <th>Amount</th>
+                                <th>Payment Method</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody id="paymentsTable">
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let allPayments = [];
+
+    document.addEventListener('DOMContentLoaded', async function() {
+        await loadPaymentHistory();
+    });
+
+    async function loadPaymentHistory() {
+        try {
+            const response = await fetch('/api/payments/my');
+            const data = await response.json();
+
+            if (data.success) {
+                allPayments = data.data.map(payment => ({
+                    ...payment,
+                    status: payment.status || 'completed'
+                }));
+                displayPayments(allPayments);
+                updatePaymentStats(allPayments);
+            }
+
+        } catch (error) {
+            console.error('Load payments error:', error);
+            document.getElementById('paymentsTable').innerHTML =
+                '<tr><td colspan="7" class="text-center py-4 text-danger">Failed to load payment history</td></tr>';
+        }
+    }
+
+    function displayPayments(payments) {
+        const tbody = document.getElementById('paymentsTable');
+
+        if (!payments || payments.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No payment history found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = payments.map(payment => `
+        <tr>
+            <td>${formatDate(payment.payment_date)}</td>
+            <td><strong>#INV-${payment.bill_id}</strong></td>
+            <td>Monthly Subscription - ${payment.generator_name || 'Generator'}</td>
+            <td><strong>$${payment.amount}</strong></td>
+            <td>
+                <i class="fas fa-${getPaymentIcon(payment.payment_method)} me-1"></i>
+                ${formatPaymentMethod(payment.payment_method)}
+            </td>
+            <td><span class="badge bg-${getStatusColor(payment.status)}">${payment.status}</span></td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary" onclick="downloadReceipt(${payment.payment_id})">
+                    <i class="fas fa-download"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="viewDetails(${payment.payment_id})">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+    }
+
+    function updatePaymentStats(payments) {
+        const currentYear = new Date().getFullYear();
+        const yearPayments = payments.filter(p => new Date(p.payment_date).getFullYear() === currentYear);
+
+        const totalPaid = yearPayments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
+        document.getElementById('totalPaidYear').textContent = `$${totalPaid.toFixed(2)}`;
+
+        document.getElementById('totalTransactions').textContent = payments.length;
+
+        if (payments.length > 0) {
+            document.getElementById('lastPaymentDate').textContent =
+                formatDate(payments[0].payment_date, true);
+        }
+
+        if (payments.length > 0) {
+            const avg = totalPaid / yearPayments.length;
+            document.getElementById('avgPayment').textContent = `$${avg.toFixed(2)}`;
+        }
+    }
+
+    function filterPayments() {
+        const yearFilter = document.getElementById('yearFilter').value;
+        const statusFilter = document.getElementById('statusFilter').value;
+        const methodFilter = document.getElementById('methodFilter').value;
+
+        let filtered = allPayments;
+
+        if (yearFilter !== 'all') {
+            filtered = filtered.filter(p =>
+                new Date(p.payment_date).getFullYear() === parseInt(yearFilter)
+            );
+        }
+
+        if (statusFilter !== 'all') {
+            filtered = filtered.filter(p => p.status === statusFilter);
+        }
+
+        if (methodFilter !== 'all') {
+            filtered = filtered.filter(p => p.payment_method === methodFilter);
+        }
+
+        displayPayments(filtered);
+    }
+
+    function resetFilters() {
+        document.getElementById('yearFilter').value = '2025';
+        document.getElementById('statusFilter').value = 'all';
+        document.getElementById('methodFilter').value = 'all';
+        displayPayments(allPayments);
+    }
+
+    function getPaymentIcon(method) {
+        const icons = {
+            'card': 'credit-card text-primary',
+            'cash': 'money-bill-wave text-success',
+            'bank_transfer': 'university text-info'
+        };
+        return icons[method] || 'credit-card';
+    }
+
+    function formatPaymentMethod(method) {
+        const methods = {
+            'card': 'Credit/Debit Card',
+            'cash': 'Cash',
+            'bank_transfer': 'Bank Transfer'
+        };
+        return methods[method] || method;
+    }
+
+    function getStatusColor(status) {
+        const colors = {
+            'completed': 'success',
+            'pending': 'warning',
+            'failed': 'danger'
+        };
+        return colors[status] || 'secondary';
+    }
+
+    function formatDate(dateString, shortFormat = false) {
+        const options = shortFormat ?
+            { month: 'short', day: 'numeric' } :
+            { year: 'numeric', month: 'short', day: 'numeric' };
+        return new Date(dateString).toLocaleDateString('en-US', options);
+    }
+
+    async function downloadReceipt(paymentId) {
+        try {
+            if (!window.PDFUtils) {
+                alert('PDF utilities are not loaded. Please refresh the page.');
+                return;
+            }
+
+            const userInfo = {
+                full_name: '<%= user.full_name %>',
+                email: '<%= user.email %>',
+                phone: '<%= user.phone || "" %>'
+            };
+
+            const payment = allPayments.find(p => p.payment_id === paymentId);
+
+            if (payment) {
+                const billsResponse = await fetch(`/api/bills/my`);
+                const billsData = await billsResponse.json();
+                const bill = billsData.data ? billsData.data.find(b => b.bill_id === payment.bill_id) : null;
+
+                window.PDFUtils.generateReceiptPDF(payment, bill, userInfo);
+            } else {
+                alert('Payment not found');
+            }
+        } catch (error) {
+            console.error('Download receipt error:', error);
+            alert('Failed to download receipt');
+        }
+    }
+
+    function viewDetails(paymentId) {
+        const payment = allPayments.find(p => p.payment_id === paymentId);
+        
+        if (payment) {
+            alert(`Payment Details:\n\nPayment ID: ${payment.payment_id}\nInvoice: #${payment.bill_id}\nAmount: $${payment.amount}\nDate: ${formatDate(payment.payment_date)}\nMethod: ${formatPaymentMethod(payment.payment_method)}\nStatus: ${payment.status}`);
+        }
+    }
+
+    function exportPayments() {
+        if (!allPayments || allPayments.length === 0) {
+            alert('No payments to export');
+            return;
+        }
+
+        if (!window.PDFUtils) {
+            alert('PDF utilities are not loaded. Please refresh the page.');
+            return;
+        }
+
+        const userInfo = {
+            full_name: '<%= user.full_name %>',
+            email: '<%= user.email %>',
+            phone: '<%= user.phone || "" %>'
+        };
+
+        window.PDFUtils.generatePaymentHistoryPDF(allPayments, userInfo);
+    }
+</script>
+
+<%- include('partials/footer') %>

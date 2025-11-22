@@ -1,0 +1,790 @@
+<%- include('partials/head') %>
+<style>
+    .plan-option {
+        transition: all 0.3s ease;
+    }
+    .plan-option:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .plan-option.border-primary {
+        border-width: 2px !important;
+    }
+</style>
+<%- include('partials/dashboard-navbar', { dashboardTitle: '', navbarClass: 'bg-primary' }) %>
+
+<div class="container-fluid">
+    <div class="row">
+        <%- include('partials/sidebar-user', { activePage: 'dashboard' }) %>
+
+        <div class="col-md-9 col-lg-10 px-4 py-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold mb-1">Welcome back, <%= user.full_name.split(' ')[0] %>! 👋</h2>
+                    <p class="text-muted mb-0">Here's what's happening with your electricity today.</p>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="text-muted mb-1 small">Current Bill</p>
+                                    <h3 class="fw-bold mb-0" id="currentBillAmount">$0.00</h3>
+                                </div>
+                                <div class="stat-icon bg-primary-light">
+                                    <i class="fas fa-dollar-sign text-primary"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="text-muted mb-1 small">Next Outage</p>
+                                    <h3 class="fw-bold mb-0" id="nextOutageTime">--</h3>
+                                </div>
+                                <div class="stat-icon bg-warning-light">
+                                    <i class="fas fa-clock text-warning"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="text-muted mb-1 small">Generator Status</p>
+                                    <h3 class="fw-bold mb-0 text-success">Active</h3>
+                                </div>
+                                <div class="stat-icon bg-success-light">
+                                    <i class="fas fa-plug text-success"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="text-muted mb-1 small">Pending Bills</p>
+                                    <h3 class="fw-bold mb-0" id="pendingBillsCount">0</h3>
+                                </div>
+                                <div class="stat-icon bg-danger-light">
+                                    <i class="fas fa-exclamation-triangle text-danger"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="fw-bold mb-0">
+                                <i class="fas fa-plug me-2 text-primary"></i>My Subscription
+                            </h5>
+                        </div>
+                        <div class="card-body" id="subscriptionInfo">
+                            <div class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="text-muted mt-2">Loading subscription details...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="fw-bold mb-0">
+                                <i class="fas fa-bolt me-2 text-warning"></i>Quick Actions
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <a href="/billing" class="btn btn-primary">
+                                    <i class="fas fa-credit-card me-2"></i>Pay Now
+                                </a>
+                                <a href="/outage-schedule" class="btn btn-outline-primary">
+                                    <i class="fas fa-calendar me-2"></i>View Schedule
+                                </a>
+                                <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#supportModal">
+                                    <i class="fas fa-headset me-2"></i>Contact Support
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white py-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="fw-bold mb-0">
+                                    <i class="fas fa-file-invoice me-2 text-success"></i>Recent Bills
+                                </h5>
+                                <a href="/billing" class="btn btn-sm btn-outline-primary">View All</a>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="bg-light">
+                                    <tr>
+                                        <th>Invoice #</th>
+                                        <th>Billing Period</th>
+                                        <th>Amount</th>
+                                        <th>Due Date</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="recentBillsTable">
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="fw-bold mb-0">
+                                <i class="fas fa-bell me-2 text-info"></i>Recent Notifications
+                            </h5>
+                        </div>
+                        <div class="card-body" id="notificationsContainer">
+                            <div class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="supportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Contact Support</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Subject</label>
+                        <input type="text" class="form-control" placeholder="What do you need help with?">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Message</label>
+                        <textarea class="form-control" rows="4" placeholder="Describe your issue..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="sendSupportMessage()">Send Message</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="changePlanModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit me-2"></i>Change Subscription Plan
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">Select a new plan for your subscription:</p>
+                <div id="plansList">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="confirmPlanChange()" id="confirmChangePlanBtn" disabled>
+                    <i class="fas fa-check me-1"></i>Confirm Change
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', async function() {
+        try {
+            await loadDashboardData();
+        } catch (error) {
+            console.error('Dashboard error:', error);
+        }
+    });
+
+    async function loadDashboardData() {
+        try {
+            const billsResponse = await fetch('/api/bills/my');
+            const billsData = await billsResponse.json();
+
+            console.log('Bills data:', billsData); 
+
+            if (billsData.success && billsData.data) {
+                displayBills(billsData.data);
+                updateBillStats(billsData.data);
+            } else {
+                console.error('Bills error:', billsData.message);
+                displayNoBills();
+            }
+
+            const notifResponse = await fetch('/api/notifications?limit=5');
+            const notifData = await notifResponse.json();
+
+            console.log('Notifications data:', notifData);
+
+            if (notifData.success && notifData.data) {
+                displayNotifications(notifData.data);
+            } else {
+                console.error('Notifications error:', notifData.message);
+                displayNoNotifications();
+            }
+
+            await loadSubscriptionInfo();
+
+            await loadNextOutage();
+
+        } catch (error) {
+            console.error('Load data error:', error);
+            displayError();
+        }
+    }
+
+    async function loadSubscriptionInfo() {
+        try {
+            const response = await fetch('/api/subscriptions/my');
+            const data = await response.json();
+
+            console.log('Subscription data:', data); 
+
+            if (data.success && data.data && data.data.length > 0) {
+                const activeSubscription = data.data.find(sub => sub.status === 'active');
+                const displaySubscription = activeSubscription || data.data[0];
+                
+                displaySubscriptionInfo(displaySubscription);
+            } else {
+                displayNoSubscription();
+            }
+        } catch (error) {
+            console.error('Subscription error:', error);
+            displayNoSubscription();
+        }
+    }
+
+    function displaySubscriptionInfo(subscription) {
+        const container = document.getElementById('subscriptionInfo');
+        
+        if (subscription.status === 'cancelled') {
+            container.innerHTML = `
+                <div class="text-center py-4">
+                    <i class="fas fa-times-circle fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted mb-2">Subscription Cancelled</h5>
+                    <p class="text-muted mb-3">Your subscription to <strong>${subscription.generator_name}</strong> has been cancelled.</p>
+                    <div class="alert alert-info mb-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        You can subscribe to a new generator anytime!
+                    </div>
+                    <button class="btn btn-primary" onclick="findGenerator()">
+                        <i class="fas fa-search me-2"></i>Find New Generator
+                    </button>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = `
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="text-muted small">Generator</label>
+                <p class="fw-bold mb-0">${subscription.generator_name}</p>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="text-muted small">Plan</label>
+                <p class="fw-bold mb-0">${subscription.plan_name} (${subscription.amperage}A)</p>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="text-muted small">Monthly Fee</label>
+                <p class="fw-bold mb-0 text-primary">$${subscription.monthly_price}</p>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="text-muted small">Status</label>
+                <p class="mb-0">
+                    <span class="badge bg-${subscription.status === 'active' ? 'success' : 'secondary'}">${subscription.status}</span>
+                </p>
+            </div>
+        </div>
+        ${subscription.status === 'active' ? `
+        <div class="border-top pt-3 mt-3">
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary btn-sm" onclick="editSubscription(${subscription.subscription_id}, ${subscription.generator_id})">
+                    <i class="fas fa-edit me-1"></i>Change Plan
+                </button>
+                <button class="btn btn-outline-danger btn-sm" onclick="cancelSubscription(${subscription.subscription_id})">
+                    <i class="fas fa-times me-1"></i>Cancel Subscription
+                </button>
+            </div>
+        </div>
+        ` : ''}
+    `;
+    }
+
+    function displayNoSubscription() {
+        const container = document.getElementById('subscriptionInfo');
+        container.innerHTML = `
+        <div class="text-center py-4">
+            <i class="fas fa-plug fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No Active Subscription</h5>
+            <p class="text-muted">You haven't subscribed to any generator yet.</p>
+            <button class="btn btn-primary" onclick="findGenerator()">
+                <i class="fas fa-plus me-2"></i>Find Generator
+            </button>
+        </div>
+    `;
+    }
+
+    async function loadNextOutage() {
+        try {
+            const response = await fetch('/api/schedules/my/next');
+            const data = await response.json();
+
+            if (data.success && data.data) {
+                displayNextOutage(data.data);
+            } else {
+                document.getElementById('nextOutageTime').textContent = 'No upcoming outages';
+            }
+        } catch (error) {
+            console.error('Next outage error:', error);
+            document.getElementById('nextOutageTime').textContent = '--';
+        }
+    }
+
+    function displayNextOutage(schedule) {
+        const nextOutageElement = document.getElementById('nextOutageTime');
+        const now = new Date();
+        const outageDate = new Date(schedule.outage_date + ' ' + schedule.start_time);
+        
+        const timeDiff = outageDate - now;
+        const hoursUntil = Math.floor(timeDiff / (1000 * 60 * 60));
+        const minutesUntil = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+        
+        if (hoursUntil < 0) {
+            nextOutageElement.textContent = 'Now';
+        } else if (hoursUntil < 24) {
+            nextOutageElement.textContent = `${hoursUntil}h ${minutesUntil}m`;
+        } else {
+            const daysUntil = Math.floor(hoursUntil / 24);
+            nextOutageElement.textContent = `${daysUntil} day${daysUntil > 1 ? 's' : ''}`;
+        }
+    }
+
+    function displayBills(bills) {
+        const tbody = document.getElementById('recentBillsTable');
+
+        if (!bills || bills.length === 0) {
+            displayNoBills();
+            return;
+        }
+
+        tbody.innerHTML = bills.slice(0, 5).map(bill => `
+        <tr>
+            <td><strong>#INV-${bill.bill_id}</strong></td>
+            <td>${formatDate(bill.billing_period_start)} - ${formatDate(bill.billing_period_end)}</td>
+            <td><strong>$${parseFloat(bill.amount).toFixed(2)}</strong></td>
+            <td>${formatDate(bill.due_date)}</td>
+            <td><span class="badge bg-${getBillStatusColor(bill.status)}">${bill.status}</span></td>
+            <td>
+                ${bill.status === 'pending' ?
+            `<button class="btn btn-sm btn-primary" onclick="payBill(${bill.bill_id}, ${bill.amount})">Pay Now</button>` :
+            `<button class="btn btn-sm btn-outline-secondary" onclick="downloadInvoice(${bill.bill_id})"><i class="fas fa-download"></i></button>`
+        }
+            </td>
+        </tr>
+    `).join('');
+    }
+
+    function displayNoBills() {
+        const tbody = document.getElementById('recentBillsTable');
+        tbody.innerHTML = `
+        <tr>
+            <td colspan="6" class="text-center py-4">
+                <i class="fas fa-file-invoice text-muted fa-2x mb-2"></i>
+                <p class="text-muted mb-0">No bills found</p>
+            </td>
+        </tr>
+    `;
+    }
+
+    function displayNotifications(notifications) {
+        const container = document.getElementById('notificationsContainer');
+
+        if (!notifications || notifications.length === 0) {
+            displayNoNotifications();
+            return;
+        }
+
+        container.innerHTML = notifications.map(notif => `
+        <div class="notification-item d-flex align-items-start mb-3 pb-3 border-bottom">
+            <div class="notification-icon bg-${getNotifColor(notif.type)}-light me-3">
+                <i class="fas fa-${getNotifIcon(notif.type)} text-${getNotifColor(notif.type)}"></i>
+            </div>
+            <div class="flex-grow-1">
+                <h6 class="fw-bold mb-1">${notif.title}</h6>
+                <p class="text-muted small mb-1">${notif.message}</p>
+                <small class="text-muted">${formatTimeAgo(notif.created_at)}</small>
+            </div>
+        </div>
+    `).join('');
+    }
+
+    function displayNoNotifications() {
+        const container = document.getElementById('notificationsContainer');
+        container.innerHTML = `
+        <div class="text-center py-4">
+            <i class="fas fa-bell-slash text-muted fa-2x mb-2"></i>
+            <p class="text-muted mb-0">No notifications</p>
+        </div>
+    `;
+    }
+
+    function displayError() {
+        document.getElementById('subscriptionInfo').innerHTML =
+            '<p class="text-center text-danger py-4">Error loading data. Please refresh the page.</p>';
+        document.getElementById('recentBillsTable').innerHTML =
+            '<tr><td colspan="6" class="text-center text-danger py-4">Error loading bills</td></tr>';
+        document.getElementById('notificationsContainer').innerHTML =
+            '<p class="text-center text-danger py-4">Error loading notifications</p>';
+    }
+
+    function updateBillStats(bills) {
+        const pendingBills = bills.filter(b => b.status === 'pending');
+        document.getElementById('pendingBillsCount').textContent = pendingBills.length;
+
+        if (pendingBills.length > 0) {
+            const totalDue = pendingBills.reduce((sum, bill) => sum + parseFloat(bill.amount), 0);
+            document.getElementById('currentBillAmount').textContent = `$${totalDue.toFixed(2)}`;
+        }
+    }
+
+    function getBillStatusColor(status) {
+        const colors = {
+            'paid': 'success',
+            'pending': 'warning',
+            'overdue': 'danger',
+            'cancelled': 'secondary'
+        };
+        return colors[status] || 'secondary';
+    }
+
+    function getNotifColor(type) {
+        const colors = {
+            'outage': 'warning',
+            'bill': 'info',
+            'payment': 'success',
+            'system': 'primary'
+        };
+        return colors[type] || 'secondary';
+    }
+
+    function getNotifIcon(type) {
+        const icons = {
+            'outage': 'exclamation-triangle',
+            'bill': 'file-invoice-dollar',
+            'payment': 'check-circle',
+            'system': 'info-circle'
+        };
+        return icons[type] || 'bell';
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return '--';
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    }
+
+    function formatTimeAgo(dateString) {
+        const seconds = Math.floor((new Date() - new Date(dateString)) / 1000);
+
+        if (seconds < 60) return 'Just now';
+        if (seconds < 3600) return Math.floor(seconds / 60) + ' minutes ago';
+        if (seconds < 86400) return Math.floor(seconds / 3600) + ' hours ago';
+        return Math.floor(seconds / 86400) + ' days ago';
+    }
+
+    async function payBill(billId, amount) {
+        if (!confirm(`Process payment of $${amount.toFixed(2)}?`)) return;
+
+        try {
+            const response = await fetch('/api/payments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    bill_id: billId,
+                    amount: amount,
+                    payment_method: 'card'
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('Payment successful!');
+                location.reload();
+            } else {
+                alert('Payment failed: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Payment error:', error);
+            alert('Payment failed. Please try again.');
+        }
+    }
+
+    async function sendSupportMessage() {
+        const modal = document.getElementById('supportModal');
+        const subject = modal.querySelector('input[type="text"]').value;
+        const message = modal.querySelector('textarea').value;
+        
+        if (!subject || !message) {
+            alert('Please fill in all fields');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/support/tickets', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    subject: subject,
+                    message: message,
+                    priority: 'normal'
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('Support message sent successfully! We will get back to you soon.');
+                bootstrap.Modal.getInstance(modal).hide();
+                modal.querySelector('input[type="text"]').value = '';
+                modal.querySelector('textarea').value = '';
+            } else {
+                alert('Failed to send message: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Support message error:', error);
+            alert('Failed to send message. Please try again or contact support directly.');
+        }
+    }
+
+    function findGenerator() {
+        window.location.href = '/generators';
+    }
+
+    let currentSubscriptionId = null;
+    let currentGeneratorId = null;
+    let selectedNewPlanId = null;
+
+    async function editSubscription(subscriptionId, generatorId) {
+        currentSubscriptionId = subscriptionId;
+        currentGeneratorId = generatorId;
+        selectedNewPlanId = null;
+        
+        const modal = new bootstrap.Modal(document.getElementById('changePlanModal'));
+        modal.show();
+        
+        try {
+            const response = await fetch(`/api/pricing-plans/generator/${generatorId}`);
+            const data = await response.json();
+            
+            if (data.success && data.data && data.data.length > 0) {
+                displayAvailablePlans(data.data);
+            } else {
+                document.getElementById('plansList').innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        No plans available for this generator.
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Load plans error:', error);
+            document.getElementById('plansList').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    Failed to load plans. Please try again.
+                </div>
+            `;
+        }
+    }
+
+    function displayAvailablePlans(plans) {
+        const container = document.getElementById('plansList');
+        container.innerHTML = plans.map(plan => `
+            <div class="card mb-2 plan-option" onclick="selectPlan(${plan.plan_id}, event)" style="cursor: pointer;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">${plan.plan_name}</h6>
+                            <p class="text-muted small mb-0">${plan.amperage}A - Ideal for ${plan.description || 'households'}</p>
+                        </div>
+                        <div class="text-end">
+                            <h5 class="text-primary mb-0">$${plan.monthly_price}</h5>
+                            <small class="text-muted">per month</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function selectPlan(planId, event) {
+        selectedNewPlanId = planId;
+
+        document.querySelectorAll('.plan-option').forEach(el => {
+            el.classList.remove('border-primary', 'bg-light');
+        });
+
+        if (event && event.currentTarget) {
+            event.currentTarget.classList.add('border-primary', 'bg-light');
+        }
+
+        document.getElementById('confirmChangePlanBtn').disabled = false;
+    }
+
+    async function confirmPlanChange() {
+        if (!selectedNewPlanId || !currentSubscriptionId) {
+            alert('Please select a plan');
+            return;
+        }
+        
+        if (!confirm('Are you sure you want to change your subscription plan? The new rate will apply from your next billing cycle.')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/subscriptions/${currentSubscriptionId}/change-plan`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ plan_id: selectedNewPlanId })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('Plan changed successfully! 🎉');
+                bootstrap.Modal.getInstance(document.getElementById('changePlanModal')).hide();
+                location.reload();
+            } else {
+                alert('Failed to change plan: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Change plan error:', error);
+            alert('Failed to change plan. Please try again.');
+        }
+    }
+
+    async function cancelSubscription(subscriptionId) {
+        if (!confirm('⚠️ Are you sure you want to cancel your subscription?\n\nThis will:\n• End your power supply from this generator\n• Cancel any future billing\n• This action cannot be undone\n\nAre you sure?')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/subscriptions/${subscriptionId}/cancel`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('Subscription cancelled successfully. We\'re sorry to see you go! 😢');
+                location.reload();
+            } else {
+                alert('Failed to cancel subscription: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Cancel subscription error:', error);
+            alert('Failed to cancel subscription. Please try again.');
+        }
+    }
+
+    async function downloadInvoice(billId) {
+        try {
+            if (!window.PDFUtils) {
+                alert('PDF utilities are not loaded. Please refresh the page.');
+                return;
+            }
+
+            const userInfo = {
+                full_name: '<%= user.full_name %>',
+                email: '<%= user.email %>',
+                phone: '<%= user.phone || "" %>'
+            };
+
+            const response = await fetch(`/api/bills/my`);
+            const billsData = await response.json();
+
+            if (billsData.success && billsData.data) {
+                const bill = billsData.data.find(b => b.bill_id === billId);
+
+                if (bill) {
+                    window.PDFUtils.generateInvoicePDF(bill, userInfo);
+                } else {
+                    alert('Invoice not found');
+                }
+            }
+        } catch (error) {
+            console.error('Download invoice error:', error);
+            alert('Failed to download invoice. Please try again.');
+        }
+    }
+</script>
+
+<%- include('partials/footer') %>

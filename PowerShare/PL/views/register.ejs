@@ -1,0 +1,432 @@
+<%- include('partials/head') %>
+
+<nav class="navbar navbar-light bg-white shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-primary" href="/">
+            <i class="fas fa-bolt"></i> PowerShare
+        </a>
+        <span class="text-muted">Already have an account? <a href="/login">Login</a></span>
+    </div>
+</nav>
+
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-lg">
+                    <div class="card-body p-5">
+                        <div class="text-center mb-4">
+                            <h2 class="fw-bold mb-2">Create Your Account</h2>
+                            <p class="text-muted">Join PowerShare today and start managing electricity smarter</p>
+                        </div>
+
+                        <div id="alertMessage" class="alert d-none"></div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">I am a:</label>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <input type="radio" class="btn-check" name="role" id="roleHousehold"
+                                           value="household" checked>
+                                    <label class="btn btn-outline-primary w-100 py-3" for="roleHousehold">
+                                        <i class="fas fa-home fa-2x d-block mb-2"></i>
+                                        <strong>Household</strong>
+                                        <small class="d-block text-muted">Manage subscriptions</small>
+                                    </label>
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="radio" class="btn-check" name="role" id="roleOwner"
+                                           value="owner">
+                                    <label class="btn btn-outline-primary w-100 py-3" for="roleOwner">
+                                        <i class="fas fa-industry fa-2x d-block mb-2"></i>
+                                        <strong>Generator Owner</strong>
+                                        <small class="d-block text-muted">Manage subscribers</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form id="registerForm" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="profileImage" class="form-label">Profile Picture (Optional)</label>
+                                <div class="d-flex align-items-center">
+                                    <div id="imagePreview" class="me-3" style="width: 80px; height: 80px; border: 2px dashed #ccc; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #f8f9fa;">
+                                        <i class="fas fa-user fa-2x text-muted"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <input type="file" class="form-control" id="profileImage" name="profile_image" accept="image/*">
+                                        <small class="text-muted">JPG, PNG, or GIF (Max 5MB)</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="fullName" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="fullName"
+                                       placeholder="Rony AbouEzzi" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email Address</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                    <input type="email" class="form-control" id="email"
+                                           placeholder="your@gmail.com" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Phone Number</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                    <input type="tel" class="form-control" id="phone"
+                                           placeholder="+961 71 345 678" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="address" class="form-label">Address</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
+                                    <input type="text" class="form-control" id="address"
+                                           placeholder="Street, City, Lebanon" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="regPassword" class="form-label">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                    <input type="password" class="form-control" id="regPassword"
+                                           placeholder="Create a strong password" required minlength="6">
+                                    <button class="btn btn-outline-secondary" type="button"
+                                            onclick="toggleRegPassword()">
+                                        <i class="fas fa-eye" id="toggleRegIcon"></i>
+                                    </button>
+                                </div>
+                                
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="confirmPassword" class="form-label">Confirm Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                    <input type="password" class="form-control" id="confirmPassword"
+                                           placeholder="Re-enter your password" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="terms" required>
+                                <label class="form-check-label" for="terms">
+                                    I agree to the <a href="#">Terms of Service</a> and
+                                    <a href="#">Privacy Policy</a>
+                                </label>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100 py-2 mb-3">
+                                <i class="fas fa-user-plus me-2"></i>Create Account
+                            </button>
+                        </form>
+
+                        <div class="text-center mt-3">
+                            <p class="text-muted mb-0">
+                                Already have an account?
+                                <a href="/login" class="fw-bold text-decoration-none">Login</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    function toggleRegPassword() {
+        const passwordInput = document.getElementById('regPassword');
+        const toggleIcon = document.getElementById('toggleRegIcon');
+
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleIcon.classList.remove('fa-eye');
+            toggleIcon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            toggleIcon.classList.remove('fa-eye-slash');
+            toggleIcon.classList.add('fa-eye');
+        }
+    }
+
+    function validateEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
+    function validatePhone(phone) {
+        const phoneRegex = /^(\+961|961)?[0-9]{8,10}$/;
+        return phoneRegex.test(phone.replace(/\s+/g, ''));
+    }
+
+    function validatePassword(password) {
+        const errors = [];
+
+        if (password.length < 8) {
+            errors.push('Password must be at least 8 characters long');
+        }
+
+        if (!/[A-Z]/.test(password)) {
+            errors.push('Password must contain at least one uppercase letter');
+        }
+
+        if (!/[a-z]/.test(password)) {
+            errors.push('Password must contain at least one lowercase letter');
+        }
+
+        if (!/[0-9]/.test(password)) {
+            errors.push('Password must contain at least one number');
+        }
+
+        if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+            errors.push('Password must contain at least one special character (!@#$%^&*...)');
+        }
+
+        return errors;
+    }
+
+    function showValidationError(fieldId, message) {
+        const field = document.getElementById(fieldId);
+        const existingError = field.parentElement.querySelector('.validation-error');
+
+        if (existingError) {
+            existingError.remove();
+        }
+
+        field.classList.add('is-invalid');
+
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'validation-error text-danger small mt-1';
+        errorDiv.innerHTML = `<i class="fas fa-exclamation-circle me-1"></i>${message}`;
+
+        field.parentElement.appendChild(errorDiv);
+    }
+
+    function clearValidationError(fieldId) {
+        const field = document.getElementById(fieldId);
+        const existingError = field.parentElement.querySelector('.validation-error');
+
+        if (existingError) {
+            existingError.remove();
+        }
+
+        field.classList.remove('is-invalid');
+        field.classList.add('is-valid');
+    }
+
+    document.getElementById('email').addEventListener('blur', function() {
+        if (this.value && !validateEmail(this.value)) {
+            showValidationError('email', 'Please enter a valid email address');
+        } else if (this.value) {
+            clearValidationError('email');
+        }
+    });
+
+    document.getElementById('phone').addEventListener('blur', function() {
+        if (this.value && !validatePhone(this.value)) {
+            showValidationError('phone', 'Please enter a valid phone number (e.g., +961 12 345 678)');
+        } else if (this.value) {
+            clearValidationError('phone');
+        }
+    });
+
+    document.getElementById('regPassword').addEventListener('input', function() {
+        const errors = validatePassword(this.value);
+
+        if (errors.length > 0) {
+            showValidationError('regPassword', errors.join('<br>'));
+        } else if (this.value) {
+            clearValidationError('regPassword');
+        }
+    });
+
+    document.getElementById('confirmPassword').addEventListener('input', function() {
+        const password = document.getElementById('regPassword').value;
+
+        if (this.value && this.value !== password) {
+            showValidationError('confirmPassword', 'Passwords do not match');
+        } else if (this.value) {
+            clearValidationError('confirmPassword');
+        }
+    });
+
+    document.getElementById('profileImage').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const preview = document.getElementById('imagePreview');
+        
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File size must be less than 5MB');
+                this.value = '';
+                return;
+            }
+            
+            if (!file.type.match('image.*')) {
+                alert('Please select an image file');
+                this.value = '';
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;">`;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    document.getElementById('registerForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const fullName = document.getElementById('fullName').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('regPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const phone = document.getElementById('phone').value.trim();
+        const address = document.getElementById('address').value.trim();
+        const role = document.querySelector('input[name="role"]:checked').value;
+        const termsAccepted = document.getElementById('terms').checked;
+
+        let hasErrors = false;
+
+        ['fullName', 'email', 'phone', 'address', 'regPassword', 'confirmPassword'].forEach(clearValidationError);
+
+        if (!fullName || fullName.length < 3) {
+            showValidationError('fullName', 'Full name must be at least 3 characters');
+            hasErrors = true;
+        }
+
+        if (!email) {
+            showValidationError('email', 'Email is required');
+            hasErrors = true;
+        } else if (!validateEmail(email)) {
+            showValidationError('email', 'Please enter a valid email address');
+            hasErrors = true;
+        }
+
+        if (!phone) {
+            showValidationError('phone', 'Phone number is required');
+            hasErrors = true;
+        } else if (!validatePhone(phone)) {
+            showValidationError('phone', 'Please enter a valid phone number (e.g., +961 12 345 678)');
+            hasErrors = true;
+        }
+
+        if (!address || address.length < 5) {
+            showValidationError('address', 'Please enter a valid address (at least 5 characters)');
+            hasErrors = true;
+        }
+
+        const passwordErrors = validatePassword(password);
+        if (passwordErrors.length > 0) {
+            showValidationError('regPassword', passwordErrors.join('<br>'));
+            hasErrors = true;
+        }
+
+        if (password !== confirmPassword) {
+            showValidationError('confirmPassword', 'Passwords do not match');
+            hasErrors = true;
+        }
+
+        if (!termsAccepted) {
+            showAlert('Please accept the Terms of Service and Privacy Policy', 'danger');
+            hasErrors = true;
+        }
+
+        if (hasErrors) {
+            return;
+        }
+
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating account...';
+
+        try {
+            const formData = new FormData();
+            formData.append('full_name', fullName);
+            formData.append('email', email);
+            formData.append('password', password);
+            formData.append('phone', phone);
+            formData.append('address', address);
+            formData.append('role', role);
+            
+            const profileImageFile = document.getElementById('profileImage').files[0];
+            if (profileImageFile) {
+                formData.append('profile_image', profileImageFile);
+            }
+
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            console.log('Registration response:', result); 
+
+            if (response.ok && result.success) {
+                this.reset();
+
+                showAlert('✅ Registration successful! Redirecting to login...', 'success');
+
+                setTimeout(() => {
+                    window.location.href = '/login';
+                }, 2000);
+            } else {
+                const errorMessage = result.message || 'Registration failed. Please try again.';
+
+                if (errorMessage.toLowerCase().includes('email') &&
+                    errorMessage.toLowerCase().includes('already')) {
+                    showValidationError('email', errorMessage);
+                }
+
+                showAlert('❌ ' + errorMessage, 'danger');
+
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-user-plus me-2"></i>Create Account';
+            }
+        } catch (error) {
+            console.error('Registration error:', error);
+            showAlert('❌ Network error. Please check your connection and try again.', 'danger');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-user-plus me-2"></i>Create Account';
+        }
+    });
+
+    function showAlert(message, type) {
+        const alertDiv = document.getElementById('alertMessage');
+        alertDiv.className = `alert alert-${type}`;
+        alertDiv.innerHTML = message;
+        alertDiv.classList.remove('d-none');
+
+        setTimeout(() => {
+            alertDiv.classList.add('d-none');
+        }, 5000);
+    }
+
+    const style = document.createElement('style');
+    style.textContent = `
+    .is-invalid {
+        border-color: #dc3545 !important;
+    }
+    .is-valid {
+        border-color: #198754 !important;
+    }
+    .validation-error {
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+`;
+    document.head.appendChild(style);
+</script>
+
+<%- include('partials/footer') %>

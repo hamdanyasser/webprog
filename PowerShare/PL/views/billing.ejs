@@ -1,0 +1,950 @@
+<%- include('partials/head') %>
+<%- include('partials/dashboard-navbar', { dashboardTitle: 'Billing & Payments', navbarClass: 'bg-primary' }) %>
+
+<div class="container-fluid">
+    <div class="row">
+        <%- include('partials/sidebar-user', { activePage: 'billing' }) %>
+
+        <div class="col-md-9 col-lg-10 px-4 py-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold mb-1">
+                        <i class="fas fa-file-invoice-dollar text-success me-2"></i>Billing & Payments
+                    </h2>
+                    <p class="text-muted mb-0">Manage your invoices and payment methods</p>
+                </div>
+                <button class="btn btn-outline-primary">
+                    <i class="fas fa-download me-2"></i>Download All
+                </button>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm bg-danger text-white h-100" id="amountDueCard">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="mb-1 small opacity-75">Amount Due</p>
+                                    <h3 class="fw-bold mb-0" id="amountDue">$0.00</h3>
+                                    <small class="opacity-75" id="dueByDate">No pending bills</small>
+                                </div>
+                                <div class="stat-icon-white">
+                                    <i class="fas fa-exclamation-triangle fa-2x"></i>
+                                </div>
+                            </div>
+                            <button class="btn btn-light w-100 mt-3" id="payNowBtn" style="display: none;" onclick="openPaymentModal()">
+                                <i class="fas fa-credit-card me-2"></i>Pay Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="text-muted mb-1 small">Total Paid (2025)</p>
+                                    <h3 class="fw-bold mb-0" id="totalPaid">$0.00</h3>
+                                    <small class="text-success" id="settledStatus">
+                                        <i class="fas fa-check-circle"></i> Loading...
+                                    </small>
+                                </div>
+                                <div class="stat-icon bg-success-light">
+                                    <i class="fas fa-check text-success"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="text-muted mb-1 small">Average Monthly</p>
+                                    <h3 class="fw-bold mb-0" id="avgMonthly">$0.00</h3>
+                                    <small class="text-muted" id="monthsCount">
+                                        <i class="fas fa-info-circle"></i> 0 months
+                                    </small>
+                                </div>
+                                <div class="stat-icon bg-info-light">
+                                    <i class="fas fa-chart-line text-info"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-file-invoice text-warning me-2"></i>Pending Invoices
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-light">
+                            <tr>
+                                <th>Invoice #</th>
+                                <th>Billing Period</th>
+                                <th>Generator</th>
+                                <th>Amount</th>
+                                <th>Due Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody id="pendingInvoicesTable">
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold mb-0">
+                            <i class="fas fa-history text-success me-2"></i>Payment History (Recent)
+                        </h5>
+                        <a href="/payment-history" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-light">
+                            <tr>
+                                <th>Invoice #</th>
+                                <th>Billing Period</th>
+                                <th>Generator</th>
+                                <th>Amount</th>
+                                <th>Paid On</th>
+                                <th>Payment Method</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody id="paymentHistoryTable">
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold mb-0">
+                            <i class="fas fa-credit-card text-primary me-2"></i>Payment Methods
+                        </h5>
+                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addCardModal">
+                            <i class="fas fa-plus me-1"></i>Add Card
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3" id="paymentMethodsContainer">
+                        <div class="col-12 text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addCardModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Payment Method</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addCardForm">
+                    <div class="mb-3">
+                        <label class="form-label">Card Holder Name *</label>
+                        <input type="text" class="form-control" id="cardHolderName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Card Type *</label>
+                        <select class="form-select" id="cardType" required>
+                            <option value="">Select card type</option>
+                            <option value="visa">Visa</option>
+                            <option value="mastercard">Mastercard</option>
+                            <option value="amex">American Express</option>
+                            <option value="discover">Discover</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Last 4 Digits *</label>
+                        <input type="text" class="form-control" id="cardLastFour" maxlength="4" pattern="\d{4}" required>
+                        <small class="text-muted">Enter the last 4 digits of your card</small>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label">Expiry Month *</label>
+                            <select class="form-select" id="expiryMonth" required>
+                                <option value="">MM</option>
+                                <option value="01">01</option>
+                                <option value="02">02</option>
+                                <option value="03">03</option>
+                                <option value="04">04</option>
+                                <option value="05">05</option>
+                                <option value="06">06</option>
+                                <option value="07">07</option>
+                                <option value="08">08</option>
+                                <option value="09">09</option>
+                                <option value="10">10</option>
+                                <option value="11">11</option>
+                                <option value="12">12</option>
+                            </select>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label">Expiry Year *</label>
+                            <select class="form-select" id="expiryYear" required>
+                                <option value="">YYYY</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="setAsDefault">
+                        <label class="form-check-label" for="setAsDefault">
+                            Set as default payment method
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="addCard()">Add Card</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editCardModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Payment Method</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editCardForm">
+                    <input type="hidden" id="editPaymentMethodId">
+                    <div class="mb-3">
+                        <label class="form-label">Card Holder Name *</label>
+                        <input type="text" class="form-control" id="editCardHolderName" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label">Expiry Month *</label>
+                            <select class="form-select" id="editExpiryMonth" required>
+                                <option value="">MM</option>
+                                <option value="01">01</option>
+                                <option value="02">02</option>
+                                <option value="03">03</option>
+                                <option value="04">04</option>
+                                <option value="05">05</option>
+                                <option value="06">06</option>
+                                <option value="07">07</option>
+                                <option value="08">08</option>
+                                <option value="09">09</option>
+                                <option value="10">10</option>
+                                <option value="11">11</option>
+                                <option value="12">12</option>
+                            </select>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label">Expiry Year *</label>
+                            <select class="form-select" id="editExpiryYear" required>
+                                <option value="">YYYY</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="updateCard()">Update Card</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') %>
+
+<script>
+    let pendingBills = [];
+    let paidBills = [];
+    let allPayments = [];
+    let paymentMethods = [];
+
+    document.addEventListener('DOMContentLoaded', async function() {
+        populateYearDropdowns();
+        await loadBillingData();
+    });
+
+    async function loadBillingData() {
+        try {
+            const billsResponse = await fetch('/api/bills/my');
+            const billsData = await billsResponse.json();
+
+            if (billsData.success && billsData.data) {
+                pendingBills = billsData.data.filter(b => b.status === 'pending');
+                paidBills = billsData.data.filter(b => b.status === 'paid');
+                
+                displayPendingInvoices(pendingBills);
+                updateBillingStats(billsData.data);
+            } else {
+                displayNoPendingInvoices();
+            }
+
+            const paymentsResponse = await fetch('/api/payments/my');
+            const paymentsData = await paymentsResponse.json();
+
+            if (paymentsData.success && paymentsData.data) {
+                allPayments = paymentsData.data;
+                displayPaymentHistory(allPayments.slice(0, 5)); 
+            } else {
+                displayNoPaymentHistory();
+            }
+
+            await loadPaymentMethods();
+
+        } catch (error) {
+            console.error('Load billing error:', error);
+            displayError();
+        }
+    }
+
+    async function loadPaymentMethods() {
+        try {
+            const response = await fetch('/api/payment-methods/my');
+            const data = await response.json();
+
+            if (data.success && data.data) {
+                paymentMethods = data.data;
+                displayPaymentMethods(paymentMethods);
+            } else {
+                displayNoPaymentMethods();
+            }
+        } catch (error) {
+            console.error('Load payment methods error:', error);
+            displayNoPaymentMethods();
+        }
+    }
+
+    function displayPendingInvoices(bills) {
+        const tbody = document.getElementById('pendingInvoicesTable');
+
+        if (!bills || bills.length === 0) {
+            displayNoPendingInvoices();
+            return;
+        }
+
+        tbody.innerHTML = bills.map(bill => `
+            <tr class="table-warning">
+                <td><strong>#INV-${bill.bill_id}</strong></td>
+                <td>${formatDate(bill.billing_period_start)} - ${formatDate(bill.billing_period_end)}</td>
+                <td>${bill.generator_name || 'N/A'}</td>
+                <td><strong class="text-danger">$${parseFloat(bill.amount).toFixed(2)}</strong></td>
+                <td>${formatDate(bill.due_date)}</td>
+                <td>
+                    <span class="badge bg-warning"><i class="fas fa-clock me-1"></i>Pending</span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-success" onclick="payBill(${bill.bill_id}, ${bill.amount})">
+                        <i class="fas fa-credit-card me-1"></i>Pay
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="viewInvoice(${bill.bill_id})">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function displayNoPendingInvoices() {
+        const tbody = document.getElementById('pendingInvoicesTable');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-4 text-muted">
+                    <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                    <p class="mb-0">No pending invoices. You're all caught up!</p>
+                </td>
+            </tr>
+        `;
+    }
+
+    function displayPaymentHistory(payments) {
+        const tbody = document.getElementById('paymentHistoryTable');
+
+        if (!payments || payments.length === 0) {
+            displayNoPaymentHistory();
+            return;
+        }
+
+        tbody.innerHTML = payments.map(payment => `
+            <tr>
+                <td><strong>#INV-${payment.bill_id}</strong></td>
+                <td>${payment.billing_period_start ? formatDate(payment.billing_period_start) + ' - ' + formatDate(payment.billing_period_end) : 'N/A'}</td>
+                <td>${payment.generator_name || 'N/A'}</td>
+                <td><strong>$${parseFloat(payment.amount).toFixed(2)}</strong></td>
+                <td>${formatDate(payment.payment_date)}</td>
+                <td>
+                    <i class="fas fa-${getPaymentIcon(payment.payment_method)} text-primary me-1"></i>
+                    ${formatPaymentMethod(payment.payment_method)}
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" onclick="downloadReceipt(${payment.payment_id})">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="viewInvoice(${payment.bill_id})">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function displayNoPaymentHistory() {
+        const tbody = document.getElementById('paymentHistoryTable');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-4 text-muted">
+                    <i class="fas fa-history fa-2x mb-2"></i>
+                    <p class="mb-0">No payment history available</p>
+                </td>
+            </tr>
+        `;
+    }
+
+    function updateBillingStats(bills) {
+        const totalDue = pendingBills.reduce((sum, bill) => sum + parseFloat(bill.amount), 0);
+        document.getElementById('amountDue').textContent = `$${totalDue.toFixed(2)}`;
+
+        if (pendingBills.length > 0) {
+            const nextDue = pendingBills.sort((a, b) => new Date(a.due_date) - new Date(b.due_date))[0];
+            document.getElementById('dueByDate').textContent = `Due by ${formatDate(nextDue.due_date)}`;
+            document.getElementById('payNowBtn').style.display = 'block';
+        } else {
+            document.getElementById('dueByDate').textContent = 'No pending bills';
+            document.getElementById('amountDueCard').classList.remove('bg-danger');
+            document.getElementById('amountDueCard').classList.add('bg-success');
+        }
+
+        const currentYear = new Date().getFullYear();
+        const totalPaid = allPayments
+            .filter(p => new Date(p.payment_date).getFullYear() === currentYear)
+            .reduce((sum, p) => sum + parseFloat(p.amount), 0);
+        document.getElementById('totalPaid').textContent = `$${totalPaid.toFixed(2)}`;
+
+        if (pendingBills.length === 0) {
+            document.getElementById('settledStatus').innerHTML = '<i class="fas fa-check-circle"></i> All settled';
+        } else {
+            document.getElementById('settledStatus').innerHTML = `<i class="fas fa-exclamation-circle"></i> ${pendingBills.length} pending`;
+        }
+
+        const paidThisYear = allPayments.filter(p => new Date(p.payment_date).getFullYear() === currentYear);
+        if (paidThisYear.length > 0) {
+            const avg = totalPaid / paidThisYear.length;
+            document.getElementById('avgMonthly').textContent = `$${avg.toFixed(2)}`;
+            document.getElementById('monthsCount').innerHTML = `<i class="fas fa-info-circle"></i> ${paidThisYear.length} payments`;
+        }
+    }
+
+    function displayError() {
+        document.getElementById('pendingInvoicesTable').innerHTML =
+            '<tr><td colspan="7" class="text-center py-4 text-danger">Error loading billing data. Please refresh the page.</td></tr>';
+        document.getElementById('paymentHistoryTable').innerHTML =
+            '<tr><td colspan="7" class="text-center py-4 text-danger">Error loading payment history.</td></tr>';
+    }
+
+    async function payBill(billId, amount) {
+        if (!confirm(`Process payment of $${amount.toFixed(2)}?`)) return;
+
+        try {
+            const response = await fetch('/api/payments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    bill_id: billId,
+                    amount: amount,
+                    payment_method: 'card'
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('Payment successful! Thank you for your payment.');
+                location.reload();
+            } else {
+                alert('Payment failed: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Payment error:', error);
+            alert('Payment failed. Please try again.');
+        }
+    }
+
+    function openPaymentModal() {
+        console.log('Pay Now button clicked!');
+        console.log('Pending bills:', pendingBills);
+        
+        if (!pendingBills || pendingBills.length === 0) {
+            alert('No pending bills to pay. Please refresh the page and try again.');
+            return;
+        }
+
+        if (pendingBills.length === 1) {
+            payBill(pendingBills[0].bill_id, pendingBills[0].amount);
+            return;
+        }
+
+        const totalDue = pendingBills.reduce((sum, bill) => sum + parseFloat(bill.amount), 0);
+        const message = `You have ${pendingBills.length} pending bills totaling $${totalDue.toFixed(2)}.\n\nPay all bills now?`;
+        
+        if (confirm(message)) {
+            payAllBills();
+        } else {
+            if (confirm('Pay the oldest bill first?')) {
+                const oldestBill = pendingBills.sort((a, b) => new Date(a.due_date) - new Date(b.due_date))[0];
+                payBill(oldestBill.bill_id, oldestBill.amount);
+            }
+        }
+    }
+
+    async function payAllBills() {
+        if (!pendingBills || pendingBills.length === 0) {
+            alert('No pending bills to pay.');
+            return;
+        }
+
+        const totalAmount = pendingBills.reduce((sum, bill) => sum + parseFloat(bill.amount), 0);
+        
+        if (!confirm(`Process payment of $${totalAmount.toFixed(2)} for ${pendingBills.length} bill(s)?`)) {
+            return;
+        }
+
+        let successCount = 0;
+        let failCount = 0;
+
+        const processingMsg = document.createElement('div');
+        processingMsg.className = 'alert alert-info position-fixed top-50 start-50 translate-middle';
+        processingMsg.style.zIndex = '9999';
+        processingMsg.innerHTML = '<div class="spinner-border spinner-border-sm me-2"></div>Processing payments...';
+        document.body.appendChild(processingMsg);
+
+        try {
+            for (const bill of pendingBills) {
+                try {
+                    const response = await fetch('/api/payments', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            bill_id: bill.bill_id,
+                            amount: bill.amount,
+                            payment_method: 'card'
+                        })
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        successCount++;
+                    } else {
+                        failCount++;
+                        console.error('Payment failed for bill', bill.bill_id, result.message);
+                    }
+                } catch (error) {
+                    failCount++;
+                    console.error('Payment error for bill', bill.bill_id, error);
+                }
+            }
+
+            document.body.removeChild(processingMsg);
+
+            if (successCount > 0 && failCount === 0) {
+                alert(`Success! All ${successCount} payment(s) processed successfully.`);
+                location.reload();
+            } else if (successCount > 0 && failCount > 0) {
+                alert(`Partially successful: ${successCount} payment(s) succeeded, ${failCount} failed. The page will refresh.`);
+                location.reload();
+            } else {
+                alert('All payments failed. Please try again or contact support.');
+            }
+        } catch (error) {
+            document.body.removeChild(processingMsg);
+            console.error('Pay all bills error:', error);
+            alert('Failed to process payments. Please try again.');
+        }
+    }
+
+    function getPaymentIcon(method) {
+        const icons = {
+            'card': 'credit-card',
+            'cash': 'money-bill-wave',
+            'bank_transfer': 'university'
+        };
+        return icons[method] || 'credit-card';
+    }
+
+    function formatPaymentMethod(method) {
+        const methods = {
+            'card': 'Credit/Debit Card',
+            'cash': 'Cash',
+            'bank_transfer': 'Bank Transfer'
+        };
+        return methods[method] || method;
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    }
+
+    function displayPaymentMethods(methods) {
+        const container = document.getElementById('paymentMethodsContainer');
+
+        if (!methods || methods.length === 0) {
+            displayNoPaymentMethods();
+            return;
+        }
+
+        container.innerHTML = methods.map(method => {
+            const cardIcon = getCardIcon(method.card_type);
+            const cardColor = getCardColor(method.card_type);
+            
+            return `
+                <div class="col-md-6">
+                    <div class="card border ${method.is_default ? 'border-primary' : ''}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div><i class="fab fa-cc-${cardIcon} fa-2x text-${cardColor}"></i></div>
+                                ${method.is_default ? '<span class="badge bg-primary">Default</span>' : ''}
+                            </div>
+                            <p class="mb-1"><strong>${capitalize(method.card_type)} ending in ${method.card_last_four}</strong></p>
+                            <p class="text-muted small mb-1">${method.card_holder_name}</p>
+                            <p class="text-muted small mb-3">Expires ${method.expiry_month}/${method.expiry_year}</p>
+                            <div class="d-flex gap-2">
+                                ${!method.is_default ? 
+                                    `<button class="btn btn-sm btn-outline-primary" onclick="setDefaultCard(${method.payment_method_id})">Set Default</button>` : 
+                                    ''
+                                }
+                                <button class="btn btn-sm btn-outline-secondary" onclick="editCardModal(${method.payment_method_id})">Edit</button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="removeCard(${method.payment_method_id})">Remove</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function displayNoPaymentMethods() {
+        const container = document.getElementById('paymentMethodsContainer');
+        container.innerHTML = `
+            <div class="col-12 text-center py-4">
+                <i class="fas fa-credit-card fa-3x text-muted mb-3"></i>
+                <p class="text-muted mb-3">No payment methods saved</p>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCardModal">
+                    <i class="fas fa-plus me-2"></i>Add Your First Card
+                </button>
+            </div>
+        `;
+    }
+
+    function getCardIcon(cardType) {
+        const icons = {
+            'visa': 'visa',
+            'mastercard': 'mastercard',
+            'amex': 'amex',
+            'discover': 'discover'
+        };
+        return icons[cardType] || 'credit-card';
+    }
+
+    function getCardColor(cardType) {
+        const colors = {
+            'visa': 'primary',
+            'mastercard': 'danger',
+            'amex': 'info',
+            'discover': 'warning'
+        };
+        return colors[cardType] || 'secondary';
+    }
+
+    function capitalize(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    function populateYearDropdowns() {
+        const currentYear = new Date().getFullYear();
+        const years = [];
+        for (let i = 0; i < 15; i++) {
+            years.push(currentYear + i);
+        }
+
+        const yearSelects = ['expiryYear', 'editExpiryYear'];
+        yearSelects.forEach(selectId => {
+            const select = document.getElementById(selectId);
+            years.forEach(year => {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                select.appendChild(option);
+            });
+        });
+    }
+
+    async function addCard() {
+        const form = document.getElementById('addCardForm');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        const cardData = {
+            card_holder_name: document.getElementById('cardHolderName').value,
+            card_type: document.getElementById('cardType').value,
+            card_last_four: document.getElementById('cardLastFour').value,
+            expiry_month: document.getElementById('expiryMonth').value,
+            expiry_year: document.getElementById('expiryYear').value,
+            is_default: document.getElementById('setAsDefault').checked
+        };
+
+        try {
+            const response = await fetch('/api/payment-methods', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(cardData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                bootstrap.Modal.getInstance(document.getElementById('addCardModal')).hide();
+                
+                form.reset();
+                
+                await loadPaymentMethods();
+                
+                alert('Payment method added successfully!');
+            } else {
+                alert('Failed to add payment method: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Add card error:', error);
+            alert('Failed to add payment method. Please try again.');
+        }
+    }
+
+    function editCardModal(paymentMethodId) {
+        const method = paymentMethods.find(m => m.payment_method_id === paymentMethodId);
+        if (!method) return;
+
+        document.getElementById('editPaymentMethodId').value = method.payment_method_id;
+        document.getElementById('editCardHolderName').value = method.card_holder_name;
+        document.getElementById('editExpiryMonth').value = method.expiry_month;
+        document.getElementById('editExpiryYear').value = method.expiry_year;
+
+        const modal = new bootstrap.Modal(document.getElementById('editCardModal'));
+        modal.show();
+    }
+
+    async function updateCard() {
+        const form = document.getElementById('editCardForm');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        const paymentMethodId = document.getElementById('editPaymentMethodId').value;
+        const updateData = {
+            card_holder_name: document.getElementById('editCardHolderName').value,
+            expiry_month: document.getElementById('editExpiryMonth').value,
+            expiry_year: document.getElementById('editExpiryYear').value
+        };
+
+        try {
+            const response = await fetch(`/api/payment-methods/${paymentMethodId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updateData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                bootstrap.Modal.getInstance(document.getElementById('editCardModal')).hide();
+                
+                await loadPaymentMethods();
+                
+                alert('Payment method updated successfully!');
+            } else {
+                alert('Failed to update payment method: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Update card error:', error);
+            alert('Failed to update payment method. Please try again.');
+        }
+    }
+
+    async function setDefaultCard(paymentMethodId) {
+        if (!confirm('Set this card as your default payment method?')) return;
+
+        try {
+            const response = await fetch(`/api/payment-methods/${paymentMethodId}/default`, {
+                method: 'PUT'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                await loadPaymentMethods();
+                alert('Default payment method updated!');
+            } else {
+                alert('Failed to set default: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Set default error:', error);
+            alert('Failed to set default payment method. Please try again.');
+        }
+    }
+
+    async function removeCard(paymentMethodId) {
+        if (!confirm('Are you sure you want to remove this payment method?')) return;
+
+        try {
+            const response = await fetch(`/api/payment-methods/${paymentMethodId}`, {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                await loadPaymentMethods();
+                alert('Payment method removed successfully!');
+            } else {
+                alert('Failed to remove payment method: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Remove card error:', error);
+            alert('Failed to remove payment method. Please try again.');
+        }
+    }
+
+    async function viewInvoice(billId) {
+        try {
+            if (!window.PDFUtils) {
+                alert('PDF utilities are not loaded. Please refresh the page.');
+                return;
+            }
+
+            const userInfo = {
+                full_name: '<%= user.full_name %>',
+                email: '<%= user.email %>',
+                phone: '<%= user.phone || "" %>'
+            };
+
+            let bill = pendingBills.find(b => b.bill_id === billId);
+            if (!bill) {
+                bill = paidBills.find(b => b.bill_id === billId);
+            }
+
+            if (!bill) {
+                const response = await fetch(`/api/bills/my`);
+                const billsData = await response.json();
+                
+                if (billsData.success && billsData.data) {
+                    bill = billsData.data.find(b => b.bill_id === billId);
+                }
+            }
+            
+            if (bill) {
+                window.PDFUtils.generateInvoicePDF(bill, userInfo);
+            } else {
+                alert('Invoice not found');
+            }
+        } catch (error) {
+            console.error('View invoice error:', error);
+            alert('Failed to load invoice. Please try again.');
+        }
+    }
+
+    async function downloadReceipt(paymentId) {
+        try {
+            if (!window.PDFUtils) {
+                alert('PDF utilities are not loaded. Please refresh the page.');
+                return;
+            }
+
+            const userInfo = {
+                full_name: '<%= user.full_name %>',
+                email: '<%= user.email %>',
+                phone: '<%= user.phone || "" %>'
+            };
+
+            let payment = allPayments.find(p => p.payment_id === paymentId);
+            
+            if (!payment) {
+                const response = await fetch(`/api/payments/my`);
+                const paymentsData = await response.json();
+                
+                if (paymentsData.success && paymentsData.data) {
+                    payment = paymentsData.data.find(p => p.payment_id === paymentId);
+                }
+            }
+            
+            if (payment) {
+                let bill = pendingBills.find(b => b.bill_id === payment.bill_id);
+                if (!bill) {
+                    bill = paidBills.find(b => b.bill_id === payment.bill_id);
+                }
+                
+                if (!bill) {
+                    const billsResponse = await fetch(`/api/bills/my`);
+                    const billsData = await billsResponse.json();
+                    if (billsData.success && billsData.data) {
+                        bill = billsData.data.find(b => b.bill_id === payment.bill_id);
+                    }
+                }
+                
+                window.PDFUtils.generateReceiptPDF(payment, bill, userInfo);
+            } else {
+                alert('Payment receipt not found');
+            }
+        } catch (error) {
+            console.error('Download receipt error:', error);
+            alert('Failed to download receipt. Please try again.');
+        }
+    }
+</script>

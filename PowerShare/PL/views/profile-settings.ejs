@@ -1,0 +1,532 @@
+<%- include('partials/head') %>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="#" onclick="goBack()">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+</nav>
+
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div class="position-relative d-inline-block">
+                            <% if (user.profile_image) { %>
+                                <img id="sidebarProfileImage" src="<%= user.profile_image %>" alt="Profile" 
+                                     style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #0d6efd;">
+                            <% } else { %>
+                                <div class="avatar-circle mb-3" id="sidebarAvatar" style="width: 100px; height: 100px; font-size: 40px; margin: 0 auto; line-height: 100px;">
+                                    <span id="avatarInitials"><%= user.full_name.split(' ').map(n => n[0]).join('') %></span>
+                                </div>
+                            <% } %>
+                        </div>
+                        <h5 class="fw-bold mb-0"><%= user.full_name %></h5>
+                        <small class="text-muted"><%= user.role %></small>
+                    </div>
+                    <ul class="nav nav-pills flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#profile" data-bs-toggle="tab">
+                                <i class="fas fa-user me-2"></i>Profile
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#security" data-bs-toggle="tab">
+                                <i class="fas fa-lock me-2"></i>Security
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#notifications-settings" data-bs-toggle="tab">
+                                <i class="fas fa-bell me-2"></i>Notifications
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#preferences" data-bs-toggle="tab">
+                                <i class="fas fa-cog me-2"></i>Preferences
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="profile">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="fw-bold mb-0">
+                                <i class="fas fa-user me-2"></i>Profile Information
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="profileForm" enctype="multipart/form-data">
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold">Profile Picture</label>
+                                    <div class="d-flex align-items-center">
+                                        <div class="position-relative me-3">
+                                            <% if (user.profile_image) { %>
+                                                <img id="profileImagePreview" src="<%= user.profile_image %>" alt="Profile" 
+                                                     style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 2px solid #dee2e6;">
+                                            <% } else { %>
+                                                <div id="profileImagePreview" style="width: 100px; height: 100px; border-radius: 50%; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; background: #f8f9fa;">
+                                                    <i class="fas fa-user fa-2x text-muted"></i>
+                                                </div>
+                                            <% } %>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <input type="file" class="form-control mb-2" id="profileImageInput" name="profile_image" accept="image/*">
+                                            <small class="text-muted">JPG, PNG, or GIF (Max 5MB)</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="fullName" class="form-label">Full Name</label>
+                                    <input type="text" class="form-control" id="fullName" value="<%= user.full_name %>" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email Address</label>
+                                    <input type="email" class="form-control" id="email" value="<%= user.email %>" readonly>
+                                    <small class="text-muted">Email cannot be changed</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="phone" class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control" id="phone" value="<%= user.phone || '' %>">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="address" class="form-label">Address</label>
+                                    <textarea class="form-control" id="address" rows="2"><%= user.address || '' %></textarea>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Save Changes
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="security">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="fw-bold mb-0">
+                                <i class="fas fa-lock me-2"></i>Security Settings
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="fw-bold mb-3">Change Password</h6>
+                            <form id="passwordForm">
+                                <div class="mb-3">
+                                    <label for="currentPassword" class="form-label">Current Password</label>
+                                    <input type="password" class="form-control" id="currentPassword" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="newPassword" class="form-label">New Password</label>
+                                    <input type="password" class="form-control" id="newPassword" minlength="8" required>
+                                    <small class="text-muted">
+                                        Password must be at least 8 characters with uppercase, lowercase, number, and special character
+                                    </small>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                                    <input type="password" class="form-control" id="confirmPassword" minlength="8" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-key me-2"></i>Change Password
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="notifications-settings">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="fw-bold mb-0">
+                                <i class="fas fa-bell me-2"></i>Notification Preferences
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="fw-bold mb-3">Email Notifications</h6>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
+                                <label class="form-check-label" for="emailNotifications">
+                                    <strong>Email Notifications</strong>
+                                    <small class="d-block text-muted">Receive updates and alerts via email</small>
+                                </label>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="outageAlerts" checked>
+                                <label class="form-check-label" for="outageAlerts">
+                                    <strong>Outage Alerts</strong>
+                                    <small class="d-block text-muted">Get notified about power outages</small>
+                                </label>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <h6 class="fw-bold mb-3">SMS Notifications</h6>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="smsNotifications">
+                                <label class="form-check-label" for="smsNotifications">
+                                    <strong>SMS Alerts</strong>
+                                    <small class="d-block text-muted">Receive critical alerts via text message</small>
+                                </label>
+                            </div>
+
+                            <button class="btn btn-primary mt-3" onclick="saveNotificationSettings()">
+                                <i class="fas fa-save me-2"></i>Save Preferences
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="preferences">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="fw-bold mb-0">
+                                <i class="fas fa-cog me-2"></i>Display Preferences
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="fw-bold mb-3">Theme Settings</h6>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="darkModeToggle">
+                                <label class="form-check-label" for="darkModeToggle">
+                                    <strong>Dark Mode</strong>
+                                    <small class="d-block text-muted">Switch between light and dark theme</small>
+                                </label>
+                            </div>
+
+                            <div class="alert alert-info mt-3" role="alert">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Your theme preference will be saved and applied across all pages.
+                            </div>
+
+                            <button class="btn btn-primary mt-3" onclick="saveThemePreferences()">
+                                <i class="fas fa-save me-2"></i>Save Preferences
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function goBack() {
+        window.history.back();
+    }
+
+    document.getElementById('profileImageInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const preview = document.getElementById('profileImagePreview');
+        
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File size must be less than 5MB');
+                this.value = '';
+                return;
+            }
+            
+            if (!file.type.match('image.*')) {
+                alert('Please select an image file');
+                this.value = '';
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    document.getElementById('profileForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const formData = new FormData();
+        formData.append('full_name', document.getElementById('fullName').value);
+        formData.append('phone', document.getElementById('phone').value);
+        formData.append('address', document.getElementById('address').value);
+        
+        const profileImageFile = document.getElementById('profileImageInput').files[0];
+        if (profileImageFile) {
+            formData.append('profile_image', profileImageFile);
+        }
+
+        try {
+            const response = await fetch('/api/users/profile', {
+                method: 'PUT',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('Profile updated successfully!');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                alert('Failed to update profile: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Update error:', error);
+            alert('Failed to update profile');
+        }
+    });
+
+    function validatePassword(password) {
+        const errors = [];
+
+        if (password.length < 8) {
+            errors.push('Password must be at least 8 characters long');
+        }
+
+        if (!/[A-Z]/.test(password)) {
+            errors.push('Password must contain at least one uppercase letter');
+        }
+
+        if (!/[a-z]/.test(password)) {
+            errors.push('Password must contain at least one lowercase letter');
+        }
+
+        if (!/[0-9]/.test(password)) {
+            errors.push('Password must contain at least one number');
+        }
+
+        if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+            errors.push('Password must contain at least one special character (!@#$%^&*...)');
+        }
+
+        return errors;
+    }
+
+    function showValidationError(fieldId, message) {
+        const field = document.getElementById(fieldId);
+        const existingError = field.parentElement.querySelector('.validation-error');
+
+        if (existingError) {
+            existingError.remove();
+        }
+
+        field.classList.add('is-invalid');
+
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'validation-error text-danger small mt-1';
+        errorDiv.innerHTML = `<i class="fas fa-exclamation-circle me-1"></i>${message}`;
+
+        field.parentElement.appendChild(errorDiv);
+    }
+
+    function clearValidationError(fieldId) {
+        const field = document.getElementById(fieldId);
+        const existingError = field.parentElement.querySelector('.validation-error');
+
+        if (existingError) {
+            existingError.remove();
+        }
+
+        field.classList.remove('is-invalid');
+    }
+
+    document.getElementById('newPassword').addEventListener('input', function() {
+        const errors = validatePassword(this.value);
+
+        if (errors.length > 0) {
+            showValidationError('newPassword', errors.join('<br>'));
+        } else if (this.value) {
+            clearValidationError('newPassword');
+        }
+    });
+
+    document.getElementById('confirmPassword').addEventListener('input', function() {
+        const newPassword = document.getElementById('newPassword').value;
+
+        if (this.value && this.value !== newPassword) {
+            showValidationError('confirmPassword', 'Passwords do not match');
+        } else if (this.value) {
+            clearValidationError('confirmPassword');
+        }
+    });
+
+    document.getElementById('passwordForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const currentPassword = document.getElementById('currentPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        clearValidationError('currentPassword');
+        clearValidationError('newPassword');
+        clearValidationError('confirmPassword');
+
+        let hasErrors = false;
+
+        const passwordErrors = validatePassword(newPassword);
+        if (passwordErrors.length > 0) {
+            showValidationError('newPassword', passwordErrors.join('<br>'));
+            hasErrors = true;
+        }
+
+        if (newPassword !== confirmPassword) {
+            showValidationError('confirmPassword', 'Passwords do not match');
+            hasErrors = true;
+        }
+
+        if (hasErrors) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/auth/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    current_password: currentPassword,
+                    new_password: newPassword
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('Password changed successfully!');
+                this.reset();
+            } else {
+                alert('Failed to change password: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Password change error:', error);
+            alert('Failed to change password. Please try again.');
+        }
+    });
+
+    async function loadNotificationPreferences() {
+        try {
+            const response = await fetch('/api/users/settings/notifications', {
+                credentials: 'include'
+            });
+
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                const preferences = result.data;
+
+                document.getElementById('emailNotifications').checked = preferences.email_notifications;
+                document.getElementById('outageAlerts').checked = preferences.outage_alerts;
+                document.getElementById('smsNotifications').checked = preferences.sms_notifications;
+
+                if (preferences.theme === 'dark') {
+                    document.getElementById('darkModeToggle').checked = true;
+                }
+            }
+        } catch (error) {
+            console.error('Load preferences error:', error);
+        }
+    }
+
+    async function saveNotificationSettings() {
+        const emailNotifications = document.getElementById('emailNotifications').checked;
+        const outageAlerts = document.getElementById('outageAlerts').checked;
+        const smsNotifications = document.getElementById('smsNotifications').checked;
+
+        try {
+            const response = await fetch('/api/users/settings/notifications', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    email_notifications: emailNotifications,
+                    outage_alerts: outageAlerts,
+                    sms_notifications: smsNotifications,
+                    theme: document.getElementById('darkModeToggle').checked ? 'dark' : 'light'
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('Notification settings saved successfully!');
+            } else {
+                alert('Failed to save notification settings: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Save notification settings error:', error);
+            alert('Failed to save notification settings. Please try again.');
+        }
+    }
+
+    async function saveThemePreferences() {
+        const darkMode = document.getElementById('darkModeToggle').checked;
+        const theme = darkMode ? 'dark' : 'light';
+
+        try {
+            const response = await fetch('/api/users/settings/notifications', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    email_notifications: document.getElementById('emailNotifications').checked,
+                    outage_alerts: document.getElementById('outageAlerts').checked,
+                    sms_notifications: document.getElementById('smsNotifications').checked,
+                    theme: theme
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('Theme preferences saved successfully!');
+                if (typeof window.applyTheme === 'function') {
+                    window.applyTheme(theme);
+                }
+            } else {
+                alert('Failed to save theme preferences: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Save theme preferences error:', error);
+            alert('Failed to save theme preferences. Please try again.');
+        }
+    }
+
+    function toggleThemeInstantly() {
+        const darkMode = document.getElementById('darkModeToggle').checked;
+        const theme = darkMode ? 'dark' : 'light';
+
+        if (typeof window.applyTheme === 'function') {
+            window.applyTheme(theme);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadNotificationPreferences();
+
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        if (darkModeToggle) {
+            darkModeToggle.addEventListener('change', toggleThemeInstantly);
+        }
+    });
+</script>
+
+<style>
+    .is-invalid {
+        border-color: #dc3545 !important;
+    }
+    .validation-error {
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+</style>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,2109 @@
+<%- include('partials/head') %>
+<%- include('partials/dashboard-navbar', { dashboardTitle: 'Owner', navbarClass: 'bg-primary' }) %>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 col-lg-2 px-0 bg-white shadow-sm sidebar">
+            <div class="d-flex flex-column p-3">
+                <ul class="nav nav-pills flex-column mb-auto">
+                    <li class="nav-item">
+                        <a href="/dashboard" class="nav-link active">
+                            <i class="fas fa-chart-line me-2"></i>Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link text-dark" onclick="showSection('generators', event)">
+                            <i class="fas fa-industry me-2"></i>My Generators
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link text-dark" onclick="showSection('subscribers', event)">
+                            <i class="fas fa-users me-2"></i>Subscribers
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link text-dark" onclick="showSection('pricing', event)">
+                            <i class="fas fa-tags me-2"></i>Pricing Plans
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link text-dark" onclick="showSection('schedule', event)">
+                            <i class="fas fa-calendar-alt me-2"></i>Outage Schedule
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link text-dark" onclick="showSection('billing', event)">
+                            <i class="fas fa-file-invoice-dollar me-2"></i>Billing
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-9 col-lg-10 px-4 py-4">
+            <div id="dashboard-section" class="owner-section active">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold mb-1">Owner Dashboard</h2>
+                    <p class="text-muted mb-0">Manage your generator subscribers and operations</p>
+                </div>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#scheduleModal">
+                    <i class="fas fa-calendar-plus me-2"></i>Upload Schedule
+                </button>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="text-muted mb-1 small">Total Subscribers</p>
+                                    <h3 class="fw-bold mb-0" id="totalSubscribers">0</h3>
+                                    <small class="text-success">
+                                        <i class="fas fa-arrow-up"></i> <span id="subscriberGrowth">0%</span> vs last month
+                                    </small>
+                                </div>
+                                <div class="stat-icon bg-primary-light">
+                                    <i class="fas fa-users text-primary"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="text-muted mb-1 small">Monthly Revenue</p>
+                                    <h3 class="fw-bold mb-0" id="monthlyRevenue">$0</h3>
+                                    <small class="text-success">
+                                        <i class="fas fa-arrow-up"></i> <span id="revenueGrowth">0%</span> vs last month
+                                    </small>
+                                </div>
+                                <div class="stat-icon bg-success-light">
+                                    <i class="fas fa-dollar-sign text-success"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="text-muted mb-1 small">Pending Payments</p>
+                                    <h3 class="fw-bold mb-0" id="pendingPayments">0</h3>
+                                    <small class="text-warning">
+                                        <i class="fas fa-exclamation-circle"></i> Requires attention
+                                    </small>
+                                </div>
+                                <div class="stat-icon bg-warning-light">
+                                    <i class="fas fa-exclamation-triangle text-warning"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="text-muted mb-1 small">Active Plans</p>
+                                    <h3 class="fw-bold mb-0" id="activePlans">0</h3>
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle"></i> Pricing tiers
+                                    </small>
+                                </div>
+                                <div class="stat-icon bg-info-light">
+                                    <i class="fas fa-tags text-info"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="fw-bold mb-0">
+                                <i class="fas fa-chart-line me-2 text-primary"></i>Revenue Overview
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="revenueChart" height="80"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="fw-bold mb-0">
+                                <i class="fas fa-chart-pie me-2 text-success"></i>Plans Distribution
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="plansChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold mb-0">
+                            <i class="fas fa-users me-2"></i>Recent Subscribers
+                        </h5>
+                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addSubscriberModal">
+                            <i class="fas fa-plus me-1"></i>Add Subscriber
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-light">
+                            <tr>
+                                <th>Subscriber</th>
+                                <th>Plan</th>
+                                <th>Monthly Fee</th>
+                                <th>Status</th>
+                                <th>Joined</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody id="subscribersTable">
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            </div>
+
+            <div id="generators-section" class="owner-section">
+                <h2 class="fw-bold mb-4">My Generators</h2>
+                <div class="row g-3 mb-4">
+                    <div class="col-12">
+                        <button class="btn btn-success" onclick="window.location.href='/generators/add'">
+                            <i class="fas fa-plus me-2"></i>Add New Generator
+                        </button>
+                    </div>
+                </div>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="fw-bold mb-0"><i class="fas fa-industry me-2"></i>Your Generators</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th>Generator Name</th>
+                                        <th>Location</th>
+                                        <th>Capacity (kW)</th>
+                                        <th>Subscribers</th>
+                                        <th>Revenue</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="myGeneratorsTable">
+                                    <tr><td colspan="7" class="text-center py-4">
+                                        <div class="spinner-border text-primary"></div>
+                                    </td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="subscribers-section" class="owner-section">
+                <h2 class="fw-bold mb-4">Subscriber Management</h2>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="fw-bold mb-0"><i class="fas fa-users me-2"></i>All Subscribers</h5>
+                            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addSubscriberModal">
+                                <i class="fas fa-plus me-1"></i>Add Subscriber
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th>Subscriber</th>
+                                        <th>Email</th>
+                                        <th>Plan</th>
+                                        <th>Monthly Fee</th>
+                                        <th>Status</th>
+                                        <th>Joined</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="subscribersDetailTable">
+                                    <tr><td colspan="7" class="text-center py-4">
+                                        <div class="spinner-border text-primary"></div>
+                                    </td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="pricing-section" class="owner-section">
+                <h2 class="fw-bold mb-4">Pricing Plans Management</h2>
+                <div class="row g-3 mb-4">
+                    <div class="col-12">
+                        <button class="btn btn-primary" onclick="addNewPlan()">
+                            <i class="fas fa-plus me-2"></i>Add New Plan
+                        </button>
+                    </div>
+                </div>
+                <div class="row g-3" id="pricingPlansContainer">
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body text-center">
+                                <div class="spinner-border text-primary"></div>
+                                <p class="mt-2">Loading plans...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="schedule-section" class="owner-section">
+                <h2 class="fw-bold mb-4">Outage Schedule Management</h2>
+                <div class="row g-3 mb-4">
+                    <div class="col-12">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#scheduleModal">
+                            <i class="fas fa-calendar-plus me-2"></i>Add Schedule
+                        </button>
+                    </div>
+                </div>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="fw-bold mb-0"><i class="fas fa-calendar-alt me-2"></i>Upcoming Outages</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Start Time</th>
+                                        <th>End Time</th>
+                                        <th>Duration</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="schedulesTable">
+                                    <tr><td colspan="6" class="text-center py-4">
+                                        <div class="spinner-border text-primary"></div>
+                                    </td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="billing-section" class="owner-section">
+                <h2 class="fw-bold mb-4">Billing Management</h2>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <p class="text-muted small mb-1">Total Billed</p>
+                                <h4 class="fw-bold mb-0" id="totalBilled">$0.00</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <p class="text-muted small mb-1">Collected</p>
+                                <h4 class="fw-bold text-success mb-0" id="totalCollected">$0.00</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <p class="text-muted small mb-1">Pending</p>
+                                <h4 class="fw-bold text-warning mb-0" id="totalPending">$0.00</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <p class="text-muted small mb-1">Overdue</p>
+                                <h4 class="fw-bold text-danger mb-0" id="totalOverdue">$0.00</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="fw-bold mb-0"><i class="fas fa-file-invoice-dollar me-2"></i>Recent Bills</h5>
+                            <button class="btn btn-primary btn-sm" onclick="generateBills()">
+                                <i class="fas fa-plus me-1"></i>Generate Bills
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th>Bill ID</th>
+                                        <th>Subscriber</th>
+                                        <th>Amount</th>
+                                        <th>Due Date</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="billsTable">
+                                    <tr><td colspan="6" class="text-center py-4">
+                                        <div class="spinner-border text-primary"></div>
+                                    </td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="viewGeneratorModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-industry me-2"></i>Generator Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="generatorDetailsContent">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="editGeneratorFromView" onclick="editGeneratorFromView()">
+                    <i class="fas fa-edit me-1"></i>Edit Generator
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editGeneratorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit me-2"></i>Edit Generator
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editGeneratorForm">
+                    <input type="hidden" id="editGeneratorId">
+                    <div class="mb-3">
+                        <label for="editGeneratorName" class="form-label">Generator Name *</label>
+                        <input type="text" class="form-control" id="editGeneratorName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editLocation" class="form-label">Location *</label>
+                        <input type="text" class="form-control" id="editLocation" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editCapacity" class="form-label">Capacity (kW) *</label>
+                        <input type="number" class="form-control" id="editCapacity" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editStatus" class="form-label">Status</label>
+                        <select class="form-select" id="editStatus">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="maintenance">Maintenance</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveGeneratorChanges()">
+                    <i class="fas fa-save me-1"></i>Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="scheduleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Upload Outage Schedule</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="scheduleForm">
+                    <div class="mb-3">
+                        <label for="outageDate" class="form-label">Date</label>
+                        <input type="date" class="form-control" id="outageDate" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="startTime" class="form-label">Start Time</label>
+                        <input type="time" class="form-control" id="startTime" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="endTime" class="form-label">End Time</label>
+                        <input type="time" class="form-control" id="endTime" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes (Optional)</label>
+                        <textarea class="form-control" id="notes" rows="2" placeholder="Any additional information..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="uploadSchedule()">Upload Schedule</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addSubscriberModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Subscriber</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addSubscriberForm">
+                    <div class="mb-3">
+                        <label for="subscriberEmail" class="form-label">Subscriber Email</label>
+                        <input type="email" class="form-control" id="subscriberEmail" required 
+                               placeholder="user@example.com">
+                    </div>
+                    <div class="mb-3">
+                        <label for="planSelect" class="form-label">Select Plan</label>
+                        <select class="form-select" id="planSelect" required>
+                            <option value="">Choose a plan...</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="startDate" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="startDate" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="addSubscriber()">Add Subscriber</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addPricingPlanModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Pricing Plan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addPricingPlanForm">
+                    <div class="mb-3">
+                        <label for="planName" class="form-label">Plan Name</label>
+                        <input type="text" class="form-control" id="planName" required 
+                               placeholder="e.g., Basic, Standard, Premium">
+                    </div>
+                    <div class="mb-3">
+                        <label for="amperage" class="form-label">Amperage (A)</label>
+                        <input type="number" class="form-control" id="amperage" required 
+                               placeholder="e.g., 3, 5, 10" min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="monthlyPrice" class="form-label">Monthly Price ($)</label>
+                        <input type="number" class="form-control" id="monthlyPrice" required 
+                               placeholder="e.g., 25.00" min="0" step="0.01">
+                    </div>
+                    <div class="mb-3">
+                        <label for="planDescription" class="form-label">Description (Optional)</label>
+                        <textarea class="form-control" id="planDescription" rows="2" 
+                                  placeholder="Brief description of the plan"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitAddPricingPlan()">Create Plan</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editPricingPlanModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Pricing Plan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editPricingPlanForm">
+                    <input type="hidden" id="editPlanId">
+                    <div class="mb-3">
+                        <label for="editPlanName" class="form-label">Plan Name</label>
+                        <input type="text" class="form-control" id="editPlanName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editAmperage" class="form-label">Amperage (A)</label>
+                        <input type="number" class="form-control" id="editAmperage" required min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editMonthlyPrice" class="form-label">Monthly Price ($)</label>
+                        <input type="number" class="form-control" id="editMonthlyPrice" required min="0" step="0.01">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editPlanDescription" class="form-label">Description (Optional)</label>
+                        <textarea class="form-control" id="editPlanDescription" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitEditPricingPlan()">Update Plan</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="viewSubscriberModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Subscriber Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="subscriberDetailsContent">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-danger" id="cancelSubscriptionBtn" onclick="cancelSubscription()">
+                    Cancel Subscription
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="viewBillModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Bill Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="billDetailsContent">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" id="markBillPaidBtn" onclick="markBillPaidFromModal()">
+                    Mark as Paid
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let currentGeneratorId = null;
+
+    document.addEventListener('DOMContentLoaded', async function() {
+        await loadOwnerDashboard();
+        initCharts();
+    });
+
+    async function loadOwnerDashboard() {
+        try {
+            const generatorsResponse = await fetch('/api/generators/my/generators', {
+                credentials: 'include'
+            });
+            const generatorsData = await generatorsResponse.json();
+
+            if (generatorsData.success && generatorsData.data.length > 0) {
+                const generator = generatorsData.data[0];
+                currentGeneratorId = generator.generator_id;
+                localStorage.setItem('generatorId', currentGeneratorId);
+
+                await updateDashboardStats(generator);
+                await loadInitialData();
+            } else {
+                document.getElementById('totalSubscribers').textContent = '0';
+                document.getElementById('monthlyRevenue').textContent = '$0.00';
+                document.getElementById('pendingPayments').textContent = '0';
+                document.getElementById('activePlans').textContent = '0';
+
+                const dashboardContent = document.querySelector('#dashboard .row.g-4');
+                if (dashboardContent) {
+                    const emptyState = document.createElement('div');
+                    emptyState.className = 'col-12 text-center mt-5';
+                    emptyState.innerHTML = `
+                        <i class="fas fa-solar-panel fa-4x text-muted mb-3"></i>
+                        <h4>No Generator Found</h4>
+                        <p class="text-muted">You haven't created a generator yet. Click "My Generators" to add your first generator.</p>
+                    `;
+                    dashboardContent.appendChild(emptyState);
+                }
+            }
+
+        } catch (error) {
+            console.error('Load dashboard error:', error);
+        }
+    }
+
+    async function updateDashboardStats(generator) {
+        try {
+            const subsResponse = await fetch('/api/subscriptions/generator/subscribers', {
+                credentials: 'include'
+            });
+            const subsData = await subsResponse.json();
+            const subscriberCount = subsData.success ? subsData.data.length : 0;
+            
+            const plansResponse = await fetch('/api/pricing-plans/generator/' + currentGeneratorId, {
+                credentials: 'include'
+            });
+            const plansData = await plansResponse.json();
+            const plansCount = plansData.success ? plansData.data.length : 0;
+            
+            const billsResponse = await fetch('/api/bills/generator/' + currentGeneratorId, {
+                credentials: 'include'
+            });
+            const billsData = await billsResponse.json();
+            const bills = billsData.success ? billsData.data : [];
+
+            const paymentsResponse = await fetch('/api/payments/generator/' + currentGeneratorId, {
+                credentials: 'include'
+            });
+            const paymentsData = await paymentsResponse.json();
+            const payments = paymentsData.success ? paymentsData.data : [];
+
+            const pendingBills = bills.filter(b => b.status === 'pending').length;
+            const totalRevenue = payments
+                .filter(p => p.status === 'completed')
+                .reduce((sum, p) => sum + parseFloat(p.amount), 0);
+            
+            document.getElementById('totalSubscribers').textContent = subscriberCount;
+            document.getElementById('monthlyRevenue').textContent = `$${totalRevenue.toFixed(2)}`;
+            document.getElementById('pendingPayments').textContent = pendingBills;
+            document.getElementById('activePlans').textContent = plansCount;
+        } catch (error) {
+            console.error('Update stats error:', error);
+        }
+    }
+
+    async function loadInitialData() {
+        try {
+            await loadSubscribersTable();
+            await loadPricingPlansDropdown();
+        } catch (error) {
+            console.error('Load initial data error:', error);
+        }
+    }
+
+    async function loadSubscribersTable() {
+        try {
+            const response = await fetch('/api/subscriptions/generator/subscribers', {
+                credentials: 'include'
+            });
+            const data = await response.json();
+            
+            const tbody = document.getElementById('subscribersTable');
+            if (!data.success || !data.data || data.data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">No subscribers yet</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = data.data.slice(0, 5).map(subscriber => `
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-sm bg-primary-light text-primary rounded-circle me-2 d-flex align-items-center justify-content-center">
+                                ${subscriber.user_name ? subscriber.user_name.charAt(0).toUpperCase() : 'U'}
+                            </div>
+                            <div>
+                                <div class="fw-medium">${subscriber.user_name || 'N/A'}</div>
+                                <small class="text-muted">${subscriber.email || ''}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${subscriber.plan_name || 'N/A'}</td>
+                    <td>$${parseFloat(subscriber.monthly_price || 0).toFixed(2)}</td>
+                    <td><span class="badge bg-${subscriber.status === 'active' ? 'success' : 'secondary'}">${subscriber.status}</span></td>
+                    <td>${formatDate(subscriber.start_date)}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewSubscriber(${subscriber.subscription_id})">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (error) {
+            console.error('Load subscribers table error:', error);
+        }
+    }
+
+    async function loadPricingPlansDropdown() {
+        try {
+            const response = await fetch('/api/pricing-plans/generator/' + currentGeneratorId, {
+                credentials: 'include'
+            });
+            const data = await response.json();
+            
+            const select = document.getElementById('planSelect');
+            if (data.success && data.data && data.data.length > 0) {
+                select.innerHTML = '<option value="">Choose a plan...</option>' +
+                    data.data.map(plan => 
+                        `<option value="${plan.plan_id}">${plan.plan_name} - ${plan.amperage}A ($${plan.monthly_price})</option>`
+                    ).join('');
+            }
+        } catch (error) {
+            console.error('Load pricing plans dropdown error:', error);
+        }
+    }
+
+    let revenueChart = null;
+    let plansChart = null;
+
+    async function initCharts() {
+        await loadRevenueChart();
+        await loadPlansChart();
+    }
+
+    async function loadRevenueChart() {
+        try {
+            if (!currentGeneratorId) return;
+
+            const response = await fetch(`/api/bills/generator/${currentGeneratorId}`, {
+                credentials: 'include'
+            });
+            const data = await response.json();
+
+            if (!data.success || !data.data) {
+                createEmptyRevenueChart();
+                return;
+            }
+
+            const bills = data.data.filter(b => b.status === 'paid');
+            
+            const currentYear = new Date().getFullYear();
+            const monthlyRevenue = new Array(12).fill(0);
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            
+            bills.forEach(bill => {
+                const billDate = new Date(bill.billing_period_start || bill.created_at);
+                if (billDate.getFullYear() === currentYear) {
+                    const month = billDate.getMonth();
+                    monthlyRevenue[month] += parseFloat(bill.amount || 0);
+                }
+            });
+
+            const currentMonth = new Date().getMonth();
+            const labels = monthNames.slice(0, currentMonth + 1);
+            const revenueData = monthlyRevenue.slice(0, currentMonth + 1);
+
+            const revenueCtx = document.getElementById('revenueChart');
+            if (revenueCtx) {
+                if (revenueChart) {
+                    revenueChart.destroy();
+                }
+                revenueChart = new Chart(revenueCtx.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Revenue ($)',
+                            data: revenueData,
+                            borderColor: '#0d6efd',
+                            backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '$' + value.toLocaleString();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error loading revenue chart:', error);
+            createEmptyRevenueChart();
+        }
+    }
+
+    function createEmptyRevenueChart() {
+        const revenueCtx = document.getElementById('revenueChart');
+        if (revenueCtx) {
+            if (revenueChart) {
+                revenueChart.destroy();
+            }
+            revenueChart = new Chart(revenueCtx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'],
+                    datasets: [{
+                        label: 'Revenue ($)',
+                        data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        borderColor: '#0d6efd',
+                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+    }
+
+    async function loadPlansChart() {
+        try {
+            if (!currentGeneratorId) return;
+
+            const response = await fetch('/api/subscriptions/generator/subscribers', {
+                credentials: 'include'
+            });
+            const data = await response.json();
+
+            if (!data.success || !data.data || data.data.length === 0) {
+                createEmptyPlansChart();
+                return;
+            }
+
+            const planCounts = {};
+            const planColors = {};
+            const colors = ['#0d6efd', '#0dcaf0', '#ffc107', '#20c997', '#6f42c1', '#fd7e14'];
+            let colorIndex = 0;
+
+            data.data.forEach(subscriber => {
+                const planName = subscriber.plan_name || 'Unknown Plan';
+                planCounts[planName] = (planCounts[planName] || 0) + 1;
+                if (!planColors[planName]) {
+                    planColors[planName] = colors[colorIndex % colors.length];
+                    colorIndex++;
+                }
+            });
+
+            const labels = Object.keys(planCounts);
+            const values = Object.values(planCounts);
+            const backgroundColors = labels.map(label => planColors[label]);
+
+            const plansCtx = document.getElementById('plansChart');
+            if (plansCtx) {
+                if (plansChart) {
+                    plansChart.destroy();
+                }
+                plansChart = new Chart(plansCtx.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: values,
+                            backgroundColor: backgroundColors
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: { 
+                            legend: { 
+                                position: 'bottom',
+                                labels: {
+                                    generateLabels: function(chart) {
+                                        const data = chart.data;
+                                        if (data.labels.length && data.datasets.length) {
+                                            return data.labels.map((label, i) => {
+                                                const value = data.datasets[0].data[i];
+                                                return {
+                                                    text: `${label} (${value})`,
+                                                    fillStyle: data.datasets[0].backgroundColor[i],
+                                                    hidden: false,
+                                                    index: i
+                                                };
+                                            });
+                                        }
+                                        return [];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error loading plans chart:', error);
+            createEmptyPlansChart();
+        }
+    }
+
+    function createEmptyPlansChart() {
+        const plansCtx = document.getElementById('plansChart');
+        if (plansCtx) {
+            if (plansChart) {
+                plansChart.destroy();
+            }
+            plansChart = new Chart(plansCtx.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['No Subscribers'],
+                    datasets: [{
+                        data: [1],
+                        backgroundColor: ['#e9ecef']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+    }
+
+    async function uploadSchedule() {
+        const form = document.getElementById('scheduleForm');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        try {
+            if (!currentGeneratorId) {
+                alert('Generator ID not found. Please refresh the page.');
+                return;
+            }
+
+            const response = await fetch('/api/schedules', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    generator_id: currentGeneratorId,
+                    outage_date: document.getElementById('outageDate').value,
+                    start_time: document.getElementById('startTime').value,
+                    end_time: document.getElementById('endTime').value,
+                    notes: document.getElementById('notes').value
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('Schedule uploaded successfully!');
+                const modalElement = document.getElementById('scheduleModal');
+                const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+                form.reset();
+                await loadSchedules();
+            } else {
+                alert('Failed to upload schedule: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            alert('Failed to upload schedule');
+        }
+    }
+
+    function showSection(sectionName, event) {
+        if (event) event.preventDefault();
+        
+        document.querySelectorAll('.owner-section').forEach(section => {
+            section.classList.remove('active');
+            section.style.display = 'none';
+        });
+        
+        const targetSection = document.getElementById(sectionName + '-section');
+        if (targetSection) {
+            targetSection.classList.add('active');
+            targetSection.style.display = 'block';
+        }
+        
+        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+            link.classList.remove('active');
+            link.classList.add('text-dark');
+        });
+        
+        if (event && event.target) {
+            event.target.classList.add('active');
+            event.target.classList.remove('text-dark');
+        }
+        
+        loadSectionData(sectionName);
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function loadSectionData(sectionName) {
+        switch(sectionName) {
+            case 'generators':
+                await loadMyGenerators();
+                break;
+            case 'subscribers':
+                await loadSubscribersDetail();
+                break;
+            case 'pricing':
+                await loadPricingPlans();
+                break;
+            case 'schedule':
+                await loadSchedules();
+                break;
+            case 'billing':
+                await loadBills();
+                break;
+        }
+    }
+
+    async function addSubscriber() {
+        const form = document.getElementById('addSubscriberForm');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+        
+        const email = document.getElementById('subscriberEmail').value;
+        const planId = document.getElementById('planSelect').value;
+        const startDate = document.getElementById('startDate').value;
+        
+        try {
+            const response = await fetch('/api/subscriptions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    user_email: email,
+                    plan_id: planId,
+                    start_date: startDate
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('Subscriber added successfully!');
+                bootstrap.Modal.getInstance(document.getElementById('addSubscriberModal')).hide();
+                form.reset();
+                await loadSubscribersDetail();
+            } else {
+                alert('Failed to add subscriber: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Add subscriber error:', error);
+            alert('Failed to add subscriber. Please try again.');
+        }
+    }
+
+    async function loadSubscribersDetail() {
+        try {
+            const response = await fetch('/api/subscriptions/generator/subscribers', {
+                credentials: 'include'
+            });
+            const data = await response.json();
+            
+            const tbody = document.getElementById('subscribersDetailTable');
+            if (!data.success || !data.data || data.data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">No subscribers found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = data.data.map(subscriber => `
+                <tr>
+                    <td>
+                        <div class="fw-medium">${subscriber.user_name || 'N/A'}</div>
+                    </td>
+                    <td>${subscriber.email || 'N/A'}</td>
+                    <td>${subscriber.plan_name || 'N/A'}</td>
+                    <td>$${parseFloat(subscriber.monthly_price || 0).toFixed(2)}</td>
+                    <td><span class="badge bg-${subscriber.status === 'active' ? 'success' : 'secondary'}">${subscriber.status}</span></td>
+                    <td>${formatDate(subscriber.start_date)}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewSubscriber(${subscriber.subscription_id})">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        ${subscriber.pending_bills > 0 ? 
+                            `<span class="badge bg-warning ms-1" title="Pending bills">${subscriber.pending_bills}</span>` : ''}
+                    </td>
+                </tr>
+            `).join('');
+        } catch (error) {
+            console.error('Load subscribers error:', error);
+            document.getElementById('subscribersDetailTable').innerHTML = 
+                '<tr><td colspan="7" class="text-center text-danger py-4">Error loading subscribers</td></tr>';
+        }
+    }
+
+    async function loadPricingPlans() {
+        try {
+            if (!currentGeneratorId) {
+                document.getElementById('pricingPlansContainer').innerHTML = 
+                    '<div class="col-12"><p class="text-center">Generator ID not found</p></div>';
+                return;
+            }
+
+            const response = await fetch('/api/pricing-plans/generator/' + currentGeneratorId, {
+                credentials: 'include'
+            });
+            const data = await response.json();
+            
+            const container = document.getElementById('pricingPlansContainer');
+            if (!data.success || !data.data || data.data.length === 0) {
+                container.innerHTML = '<div class="col-12"><p class="text-center">No pricing plans found. Create one to get started!</p></div>';
+                return;
+            }
+            
+            container.innerHTML = data.data.map(plan => `
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <h3 class="fw-bold">${plan.plan_name}</h3>
+                            <p class="text-muted">${plan.amperage}A</p>
+                            <h2 class="text-primary">$${parseFloat(plan.monthly_price).toFixed(2)}</h2>
+                            <p class="small text-muted">per month</p>
+                            ${plan.description ? `<p class="small">${plan.description}</p>` : ''}
+                            <div class="d-flex gap-2 justify-content-center mt-3">
+                                <button class="btn btn-outline-primary btn-sm" onclick="editPlan(${plan.plan_id})">
+                                    <i class="fas fa-edit me-1"></i>Edit
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm" onclick="deletePlan(${plan.plan_id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        } catch (error) {
+            console.error('Load pricing plans error:', error);
+            document.getElementById('pricingPlansContainer').innerHTML = 
+                '<div class="col-12"><p class="text-center text-danger">Error loading pricing plans</p></div>';
+        }
+    }
+
+    async function loadSchedules() {
+        try {
+            const response = await fetch('/api/schedules/my', {
+                credentials: 'include'
+            });
+            const data = await response.json();
+            
+            const tbody = document.getElementById('schedulesTable');
+            if (!data.success || !data.data || data.data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">No schedules found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = data.data.map(schedule => `
+                <tr>
+                    <td>${formatDate(schedule.outage_date)}</td>
+                    <td>${schedule.start_time}</td>
+                    <td>${schedule.end_time}</td>
+                    <td>${calculateDuration(schedule.start_time, schedule.end_time)}</td>
+                    <td><span class="badge bg-warning">Scheduled</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteSchedule(${schedule.schedule_id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (error) {
+            console.error('Load schedules error:', error);
+            document.getElementById('schedulesTable').innerHTML = 
+                '<tr><td colspan="6" class="text-center text-danger py-4">Error loading schedules</td></tr>';
+        }
+    }
+
+    async function loadMyGenerators() {
+        try {
+            const response = await fetch('/api/generators/my/generators', {
+                credentials: 'include'
+            });
+            const data = await response.json();
+            
+            const tbody = document.getElementById('myGeneratorsTable');
+            if (!data.success || !data.data || data.data.length === 0) {
+                tbody.innerHTML = `
+                    <tr><td colspan="7" class="text-center py-4">
+                        <div class="mb-3">
+                            <i class="fas fa-industry fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No generators found</h5>
+                            <p class="text-muted">Create your first generator to get started!</p>
+                        </div>
+                        <button class="btn btn-success" onclick="window.location.href='/generators/add'">
+                            <i class="fas fa-plus me-2"></i>Add Your First Generator
+                        </button>
+                    </td></tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = data.data.map(gen => `
+                <tr>
+                    <td class="fw-medium">${gen.generator_name || 'N/A'}</td>
+                    <td>${gen.location || 'N/A'}</td>
+                    <td>${gen.capacity_kw || 0} kW</td>
+                    <td>
+                        <span class="badge bg-info">${gen.subscriber_count || 0}</span>
+                    </td>
+                    <td class="text-success fw-bold">$${parseFloat(gen.total_revenue || 0).toFixed(2)}</td>
+                    <td><span class="badge bg-${gen.status === 'active' ? 'success' : 'secondary'}">${gen.status || 'active'}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewGeneratorDetails(${gen.generator_id})" title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="editGenerator(${gen.generator_id})" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (error) {
+            console.error('Load generators error:', error);
+            document.getElementById('myGeneratorsTable').innerHTML = 
+                '<tr><td colspan="7" class="text-center text-danger py-4">Error loading generators</td></tr>';
+        }
+    }
+
+    let currentViewGeneratorId = null;
+
+    async function viewGeneratorDetails(generatorId) {
+        currentViewGeneratorId = generatorId;
+        const modal = new bootstrap.Modal(document.getElementById('viewGeneratorModal'));
+        const contentDiv = document.getElementById('generatorDetailsContent');
+        
+        contentDiv.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>';
+        modal.show();
+
+        try {
+            const timestamp = new Date().getTime();
+            
+            const response = await fetch(`/api/generators/${generatorId}?t=${timestamp}`, {
+                credentials: 'include',
+                cache: 'no-cache'
+            });
+            const result = await response.json();
+            
+            if (result.success && result.data) {
+                const gen = result.data;
+                
+                const subsResponse = await fetch(`/api/subscriptions/generator/${generatorId}/subscribers?t=${timestamp}`, {
+                    credentials: 'include',
+                    cache: 'no-cache'
+                });
+                const subsData = await subsResponse.json();
+                const subscribers = subsData.success ? subsData.data : [];
+                
+                const plansResponse = await fetch(`/api/pricing-plans/generator/${generatorId}?t=${timestamp}`, {
+                    credentials: 'include',
+                    cache: 'no-cache'
+                });
+                const plansData = await plansResponse.json();
+                const plans = plansData.success ? plansData.data : [];
+                
+                const billsResponse = await fetch(`/api/bills/generator/${generatorId}?t=${timestamp}`, {
+                    credentials: 'include',
+                    cache: 'no-cache'
+                });
+                const billsData = await billsResponse.json();
+                const bills = billsData.success ? billsData.data : [];
+                
+                const totalRevenue = bills
+                    .filter(bill => bill.status === 'paid')
+                    .reduce((sum, bill) => sum + parseFloat(bill.amount || 0), 0);
+                
+                contentDiv.innerHTML = `
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="text-muted small mb-1">Generator Name</label>
+                            <p class="fw-bold mb-3">${gen.generator_name || 'N/A'}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small mb-1">Location</label>
+                            <p class="fw-bold mb-3">${gen.location || 'N/A'}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small mb-1">Capacity</label>
+                            <p class="fw-bold mb-3">${gen.capacity_kw || 0} kW</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small mb-1">Status</label>
+                            <p class="mb-3">
+                                <span class="badge bg-${gen.status === 'active' ? 'success' : gen.status === 'maintenance' ? 'warning' : 'secondary'}">
+                                    ${gen.status || 'active'}
+                                </span>
+                            </p>
+                        </div>
+                        <div class="col-12"><hr></div>
+                        <div class="col-md-4">
+                            <div class="card bg-light border-0">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                                    <h4 class="mb-0">${subscribers.length}</h4>
+                                    <small class="text-muted">Subscribers</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light border-0">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-tags fa-2x text-success mb-2"></i>
+                                    <h4 class="mb-0">${plans.length}</h4>
+                                    <small class="text-muted">Pricing Plans</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light border-0">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-dollar-sign fa-2x text-warning mb-2"></i>
+                                    <h4 class="mb-0">$${totalRevenue.toFixed(2)}</h4>
+                                    <small class="text-muted">Total Revenue</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                contentDiv.innerHTML = '<div class="alert alert-warning">Generator not found</div>';
+            }
+        } catch (error) {
+            console.error('View generator error:', error);
+            contentDiv.innerHTML = '<div class="alert alert-danger">Failed to load generator details</div>';
+        }
+    }
+
+    function editGeneratorFromView() {
+        if (currentViewGeneratorId) {
+            bootstrap.Modal.getInstance(document.getElementById('viewGeneratorModal')).hide();
+            editGenerator(currentViewGeneratorId);
+        }
+    }
+
+    async function editGenerator(generatorId) {
+        try {
+            const response = await fetch(`/api/generators/${generatorId}`, {
+                credentials: 'include'
+            });
+            const result = await response.json();
+            
+            if (result.success && result.data) {
+                const gen = result.data;
+                
+                document.getElementById('editGeneratorId').value = gen.generator_id;
+                document.getElementById('editGeneratorName').value = gen.generator_name || '';
+                document.getElementById('editLocation').value = gen.location || '';
+                document.getElementById('editCapacity').value = gen.capacity_kw || '';
+                document.getElementById('editStatus').value = gen.status || 'active';
+                
+                const modal = new bootstrap.Modal(document.getElementById('editGeneratorModal'));
+                modal.show();
+            } else {
+                alert('Failed to load generator details');
+            }
+        } catch (error) {
+            console.error('Edit generator error:', error);
+            alert('Failed to load generator details');
+        }
+    }
+
+    async function saveGeneratorChanges() {
+        const form = document.getElementById('editGeneratorForm');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        const generatorId = document.getElementById('editGeneratorId').value;
+        const generatorData = {
+            generator_name: document.getElementById('editGeneratorName').value,
+            location: document.getElementById('editLocation').value,
+            capacity_kw: parseFloat(document.getElementById('editCapacity').value),
+            status: document.getElementById('editStatus').value
+        };
+
+        try {
+            const response = await fetch(`/api/generators/${generatorId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(generatorData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('Generator updated successfully!');
+                bootstrap.Modal.getInstance(document.getElementById('editGeneratorModal')).hide();
+                await loadMyGenerators();
+            } else {
+                alert('Failed to update generator: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Save generator error:', error);
+            alert('Failed to update generator. Please try again.');
+        }
+    }
+
+    async function loadBills() {
+        try {
+            if (!currentGeneratorId) {
+                document.getElementById('billsTable').innerHTML = 
+                    '<tr><td colspan="6" class="text-center py-4">Generator ID not found</td></tr>';
+                return;
+            }
+
+            const response = await fetch('/api/bills/generator/' + currentGeneratorId, {
+                credentials: 'include'
+            });
+            const data = await response.json();
+            
+            const tbody = document.getElementById('billsTable');
+            if (!data.success || !data.data || data.data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">No bills found. Click "Generate Bills" to create bills for your subscribers.</td></tr>';
+                updateBillingStats([]); 
+                return;
+            }
+            
+            updateBillingStats(data.data);
+            
+            tbody.innerHTML = data.data.slice(0, 10).map(bill => `
+                <tr>
+                    <td>#${bill.bill_id}</td>
+                    <td>${bill.user_name || 'N/A'}</td>
+                    <td>$${parseFloat(bill.amount).toFixed(2)}</td>
+                    <td>${formatDate(bill.due_date)}</td>
+                    <td><span class="badge bg-${bill.status === 'paid' ? 'success' : bill.status === 'pending' ? 'warning' : bill.status === 'overdue' ? 'danger' : 'secondary'}">${bill.status}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewBill(${bill.bill_id})">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        ${bill.status === 'pending' ? 
+                            `<button class="btn btn-sm btn-outline-success ms-1" onclick="markBillPaid(${bill.bill_id})">
+                                <i class="fas fa-check"></i>
+                            </button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
+        } catch (error) {
+            console.error('Load bills error:', error);
+            document.getElementById('billsTable').innerHTML = 
+                '<tr><td colspan="6" class="text-center text-danger py-4">Error loading bills</td></tr>';
+        }
+    }
+
+    function updateBillingStats(bills) {
+        const totalBilled = bills.reduce((sum, bill) => sum + parseFloat(bill.amount || 0), 0);
+        const totalCollected = bills.filter(b => b.status === 'paid').reduce((sum, bill) => sum + parseFloat(bill.amount || 0), 0);
+        const totalPending = bills.filter(b => b.status === 'pending').reduce((sum, bill) => sum + parseFloat(bill.amount || 0), 0);
+        const totalOverdue = bills.filter(b => b.status === 'overdue').reduce((sum, bill) => sum + parseFloat(bill.amount || 0), 0);
+        
+        document.getElementById('totalBilled').textContent = `$${totalBilled.toFixed(2)}`;
+        document.getElementById('totalCollected').textContent = `$${totalCollected.toFixed(2)}`;
+        document.getElementById('totalPending').textContent = `$${totalPending.toFixed(2)}`;
+        document.getElementById('totalOverdue').textContent = `$${totalOverdue.toFixed(2)}`;
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return '--';
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    }
+
+    function calculateDuration(startTime, endTime) {
+        const start = new Date(`2000-01-01 ${startTime}`);
+        const end = new Date(`2000-01-01 ${endTime}`);
+        const diff = (end - start) / (1000 * 60 * 60);
+        return `${diff.toFixed(1)} hours`;
+    }
+
+    function addNewPlan() {
+        const modal = new bootstrap.Modal(document.getElementById('addPricingPlanModal'));
+        document.getElementById('addPricingPlanForm').reset();
+        modal.show();
+    }
+
+    async function submitAddPricingPlan() {
+        const form = document.getElementById('addPricingPlanForm');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        if (!currentGeneratorId) {
+            alert('Generator ID not found. Please refresh the page.');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/pricing-plans', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    generator_id: currentGeneratorId,
+                    plan_name: document.getElementById('planName').value,
+                    amperage: document.getElementById('amperage').value,
+                    monthly_price: document.getElementById('monthlyPrice').value,
+                    description: document.getElementById('planDescription').value
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('Pricing plan created successfully!');
+                const modalElement = document.getElementById('addPricingPlanModal');
+                const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+                form.reset();
+                await loadPricingPlans();
+                await loadPricingPlansDropdown();
+                await updateDashboardStats();
+            } else {
+                alert('Failed to create pricing plan: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Create pricing plan error:', error);
+            alert('Failed to create pricing plan. Please try again.');
+        }
+    }
+
+    async function editPlan(planId) {
+        try {
+            const response = await fetch('/api/pricing-plans/generator/' + currentGeneratorId, {
+                credentials: 'include'
+            });
+            const data = await response.json();
+            
+            if (data.success && data.data) {
+                const plan = data.data.find(p => p.plan_id == planId);
+                if (plan) {
+                    document.getElementById('editPlanId').value = plan.plan_id;
+                    document.getElementById('editPlanName').value = plan.plan_name;
+                    document.getElementById('editAmperage').value = plan.amperage;
+                    document.getElementById('editMonthlyPrice').value = plan.monthly_price;
+                    document.getElementById('editPlanDescription').value = plan.description || '';
+                    
+                    const modal = new bootstrap.Modal(document.getElementById('editPricingPlanModal'));
+                    modal.show();
+                }
+            }
+        } catch (error) {
+            console.error('Load plan error:', error);
+            alert('Failed to load plan details');
+        }
+    }
+
+    async function submitEditPricingPlan() {
+        const form = document.getElementById('editPricingPlanForm');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        const planId = document.getElementById('editPlanId').value;
+
+        try {
+            const response = await fetch(`/api/pricing-plans/${planId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    plan_name: document.getElementById('editPlanName').value,
+                    amperage: document.getElementById('editAmperage').value,
+                    monthly_price: document.getElementById('editMonthlyPrice').value,
+                    description: document.getElementById('editPlanDescription').value
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('Pricing plan updated successfully!');
+                const modalElement = document.getElementById('editPricingPlanModal');
+                const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+                await loadPricingPlans();
+                await loadPricingPlansDropdown();
+                await updateDashboardStats();
+            } else {
+                alert('Failed to update pricing plan: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Update pricing plan error:', error);
+            alert('Failed to update pricing plan. Please try again.');
+        }
+    }
+
+    let currentSubscriptionId = null;
+
+    async function viewSubscriber(subscriptionId) {
+        currentSubscriptionId = subscriptionId;
+        
+        try {
+            const response = await fetch('/api/subscriptions/generator/subscribers', {
+                credentials: 'include'
+            });
+            const data = await response.json();
+            
+            if (data.success && data.data) {
+                const subscriber = data.data.find(s => s.subscription_id == subscriptionId);
+                if (subscriber) {
+                    const detailsHTML = `
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-3">Subscriber Information</h6>
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <th>Name:</th>
+                                        <td>${subscriber.user_name || 'N/A'}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Email:</th>
+                                        <td>${subscriber.email || 'N/A'}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Phone:</th>
+                                        <td>${subscriber.phone || 'N/A'}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Status:</th>
+                                        <td><span class="badge bg-${subscriber.status === 'active' ? 'success' : 'secondary'}">${subscriber.status}</span></td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-3">Subscription Details</h6>
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <th>Plan:</th>
+                                        <td>${subscriber.plan_name || 'N/A'}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Monthly Fee:</th>
+                                        <td>$${parseFloat(subscriber.monthly_price || 0).toFixed(2)}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Start Date:</th>
+                                        <td>${formatDate(subscriber.start_date)}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Pending Bills:</th>
+                                        <td><span class="badge bg-warning">${subscriber.pending_bills || 0}</span></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.getElementById('subscriberDetailsContent').innerHTML = detailsHTML;
+                    
+                    const cancelBtn = document.getElementById('cancelSubscriptionBtn');
+                    if (subscriber.status === 'active') {
+                        cancelBtn.style.display = 'block';
+                    } else {
+                        cancelBtn.style.display = 'none';
+                    }
+                    
+                    const modal = new bootstrap.Modal(document.getElementById('viewSubscriberModal'));
+                    modal.show();
+                }
+            }
+        } catch (error) {
+            console.error('Load subscriber error:', error);
+            alert('Failed to load subscriber details');
+        }
+    }
+
+    async function cancelSubscription() {
+        if (!confirm('Are you sure you want to cancel this subscription? This action cannot be undone.')) {
+            return;
+        }
+
+        if (!currentSubscriptionId) {
+            alert('Subscription ID not found.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/subscriptions/${currentSubscriptionId}/cancel`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('Subscription cancelled successfully');
+                const modalElement = document.getElementById('viewSubscriberModal');
+                const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+                await loadSubscribersDetail();
+                await loadSubscribersTable();
+                await updateDashboardStats();
+            } else {
+                alert('Failed to cancel subscription: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Cancel subscription error:', error);
+            alert('Failed to cancel subscription');
+        }
+    }
+
+    async function deleteSchedule(scheduleId) {
+        if (!confirm('Are you sure you want to delete this schedule?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/schedules/${scheduleId}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('Schedule deleted successfully');
+                await loadSchedules();
+            } else {
+                alert('Failed to delete schedule: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Delete schedule error:', error);
+            alert('Failed to delete schedule');
+        }
+    }
+
+    let currentBillId = null;
+
+    async function viewBill(billId) {
+        currentBillId = billId;
+        
+        try {
+            const response = await fetch('/api/bills/generator/' + currentGeneratorId, {
+                credentials: 'include'
+            });
+            const data = await response.json();
+            
+            if (data.success && data.data) {
+                const bill = data.data.find(b => b.bill_id == billId);
+                if (bill) {
+                    const detailsHTML = `
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-3">Bill Information</h6>
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <th>Bill ID:</th>
+                                        <td>#${bill.bill_id}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Status:</th>
+                                        <td><span class="badge bg-${bill.status === 'paid' ? 'success' : bill.status === 'pending' ? 'warning' : bill.status === 'overdue' ? 'danger' : 'secondary'}">${bill.status}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Amount:</th>
+                                        <td class="fw-bold text-primary">$${parseFloat(bill.amount).toFixed(2)}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Due Date:</th>
+                                        <td>${formatDate(bill.due_date)}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-3">Subscriber Information</h6>
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <th>Name:</th>
+                                        <td>${bill.user_name || 'N/A'}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Email:</th>
+                                        <td>${bill.email || 'N/A'}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Plan:</th>
+                                        <td>${bill.plan_name || 'N/A'}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Billing Period:</th>
+                                        <td>${formatDate(bill.billing_period_start)} - ${formatDate(bill.billing_period_end)}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        ${bill.status === 'paid' && bill.payment_date ? `
+                            <div class="alert alert-success mt-3">
+                                <i class="fas fa-check-circle me-2"></i>
+                                This bill was paid on ${formatDate(bill.payment_date)}
+                            </div>
+                        ` : ''}
+                        ${bill.status === 'pending' && new Date(bill.due_date) < new Date() ? `
+                            <div class="alert alert-danger mt-3">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                This bill is overdue!
+                            </div>
+                        ` : ''}
+                    `;
+                    
+                    document.getElementById('billDetailsContent').innerHTML = detailsHTML;
+                    
+                    const markPaidBtn = document.getElementById('markBillPaidBtn');
+                    if (bill.status === 'pending') {
+                        markPaidBtn.style.display = 'block';
+                    } else {
+                        markPaidBtn.style.display = 'none';
+                    }
+                    
+                    const modal = new bootstrap.Modal(document.getElementById('viewBillModal'));
+                    modal.show();
+                }
+            }
+        } catch (error) {
+            console.error('Load bill error:', error);
+            alert('Failed to load bill details');
+        }
+    }
+
+    async function markBillPaidFromModal() {
+        if (!currentBillId) {
+            alert('Bill ID not found.');
+            return;
+        }
+        
+        await markBillPaid(currentBillId);
+        
+        await viewBill(currentBillId);
+    }
+
+    async function generateBills() {
+        if (!confirm('Generate bills for all active subscribers this month?\n\nThis will create bills for all subscribers who don\'t have a bill for the current month.')) {
+            return;
+        }
+
+        if (!currentGeneratorId) {
+            alert('Generator ID not found. Please refresh the page.');
+            return;
+        }
+
+        const generateBtn = event.target;
+        const originalText = generateBtn.innerHTML;
+        generateBtn.disabled = true;
+        generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Generating...';
+
+        try {
+            const response = await fetch(`/api/bills/generator/${currentGeneratorId}/generate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                let message = result.message;
+                if (result.data && result.data.details && result.data.details.length > 0) {
+                    message += '\n\nBills created for:\n';
+                    result.data.details.forEach(detail => {
+                        message += `• ${detail.subscriber}: $${detail.amount}\n`;
+                    });
+                }
+                alert(message);
+                await loadBills();
+                await updateDashboardStats();
+                await loadRevenueChart(); 
+            } else {
+                alert('Failed to generate bills: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Generate bills error:', error);
+            alert('Failed to generate bills. Please try again.\nError: ' + error.message);
+        } finally {
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = originalText;
+        }
+    }
+
+    async function markBillPaid(billId) {
+        if (!confirm('Mark this bill as paid?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/bills/${billId}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ status: 'paid' })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('Bill marked as paid');
+                await loadBills();
+                await updateDashboardStats();
+                await loadRevenueChart(); 
+            } else {
+                alert('Failed to update bill: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Update bill error:', error);
+            alert('Failed to update bill');
+        }
+    }
+
+    async function deletePlan(planId) {
+        if (!confirm('Are you sure you want to delete this pricing plan?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/pricing-plans/${planId}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('Pricing plan deleted successfully');
+                await loadPricingPlans();
+                await updateDashboardStats();
+            } else {
+                alert('Failed to delete plan: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Delete plan error:', error);
+            alert('Failed to delete plan');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const style = document.createElement('style');
+        style.textContent = `
+            .owner-section {
+                display: none;
+            }
+            .owner-section.active {
+                display: block;
+            }
+            .avatar-sm {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+                font-weight: 600;
+            }
+            .stat-icon {
+                width: 48px;
+                height: 48px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 12px;
+            }
+            .bg-primary-light {
+                background-color: rgba(13, 110, 253, 0.1);
+            }
+            .bg-success-light {
+                background-color: rgba(25, 135, 84, 0.1);
+            }
+            .bg-warning-light {
+                background-color: rgba(255, 193, 7, 0.1);
+            }
+            .bg-info-light {
+                background-color: rgba(13, 202, 240, 0.1);
+            }
+        `;
+        document.head.appendChild(style);
+        
+        const dashboardSection = document.getElementById('dashboard-section');
+        if (dashboardSection) {
+            dashboardSection.style.display = 'block';
+        }
+    });
+</script>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,232 @@
+<%- include('partials/head', { title: 'Add Generator - PowerShare' }) %>
+
+<body class="bg-light">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="/dashboard">
+            <i class="fas fa-shield-alt"></i> PowerShare
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/dashboard">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1"></i>
+                        <span><%= user.full_name || 'User' %></span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" href="/profile">
+                                <i class="fas fa-user me-2"></i>Profile Management
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="/logout">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-success text-white py-3">
+                    <h4 class="mb-0">
+                        <i class="fas fa-industry me-2"></i>Add New Generator
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-muted mb-4">
+                        Fill in the details below to register a new power generator in the PowerShare network.
+                    </p>
+
+                    <form id="addGeneratorForm">
+                        <div class="mb-4">
+                            <label for="generatorName" class="form-label fw-bold">
+                                <i class="fas fa-tag text-success me-2"></i>Generator Name
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="generatorName" 
+                                   placeholder="e.g., Solar Power Station Alpha" required>
+                            <small class="text-muted">Give your generator a unique and descriptive name</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="location" class="form-label fw-bold">
+                                <i class="fas fa-map-marker-alt text-danger me-2"></i>Location
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="location" 
+                                   placeholder="e.g., 123 Main St, City, State" required>
+                            <small class="text-muted">Enter the physical location of the generator</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="capacity" class="form-label fw-bold">
+                                <i class="fas fa-bolt text-warning me-2"></i>Capacity (kW)
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" class="form-control" id="capacity" 
+                                   placeholder="e.g., 5000" min="1" step="0.01" required>
+                            <small class="text-muted">Specify the power generation capacity in kilowatts</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="generatorType" class="form-label fw-bold">
+                                <i class="fas fa-cog text-info me-2"></i>Generator Type
+                            </label>
+                            <select class="form-select" id="generatorType">
+                                <option value="">Select Type (Optional)</option>
+                                <option value="solar">Solar Power</option>
+                                <option value="wind">Wind Power</option>
+                                <option value="hydro">Hydro Power</option>
+                                <option value="diesel">Diesel Generator</option>
+                                <option value="natural_gas">Natural Gas</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="description" class="form-label fw-bold">
+                                <i class="fas fa-align-left text-secondary me-2"></i>Description
+                            </label>
+                            <textarea class="form-control" id="description" rows="4" 
+                                      placeholder="Provide additional details about this generator..."></textarea>
+                            <small class="text-muted">Optional: Add any additional information about the generator</small>
+                        </div>
+
+                        <div id="alertContainer"></div>
+
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="/dashboard" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success" id="submitBtn">
+                                <i class="fas fa-check me-2"></i>Create Generator
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3">
+                        <i class="fas fa-info-circle text-info me-2"></i>Important Information
+                    </h6>
+                    <ul class="mb-0 text-muted">
+                        <li>Once created, you can set pricing plans for your generator</li>
+                        <li>Household users will be able to subscribe to your generator based on your pricing plans</li>
+                        <li>You'll receive monthly revenue based on your subscribers</li>
+                        <li>All fields marked with <span class="text-danger">*</span> are required</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') %>
+
+<script>
+    document.getElementById('addGeneratorForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const submitBtn = document.getElementById('submitBtn');
+        const originalBtnText = submitBtn.innerHTML;
+
+        try {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating...';
+
+            document.getElementById('alertContainer').innerHTML = '';
+
+            const generator_name = document.getElementById('generatorName').value.trim();
+            const location = document.getElementById('location').value.trim();
+            const capacity_kw = parseFloat(document.getElementById('capacity').value);
+
+            if (!generator_name || !location || !capacity_kw) {
+                throw new Error('Please fill in all required fields');
+            }
+
+            if (capacity_kw <= 0) {
+                throw new Error('Capacity must be greater than 0');
+            }
+
+            const response = await fetch('/api/generators', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    generator_name,
+                    location,
+                    capacity_kw
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || 'Failed to create generator');
+            }
+
+            showAlert('success', 'Generator created successfully! Redirecting to dashboard...');
+
+            setTimeout(() => {
+                window.location.href = '/dashboard';
+            }, 2000);
+
+        } catch (error) {
+            console.error('Create generator error:', error);
+            showAlert('danger', error.message || 'An error occurred while creating the generator');
+            
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+        }
+    });
+
+    function showAlert(type, message) {
+        const alertContainer = document.getElementById('alertContainer');
+        alertContainer.innerHTML = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+    }
+</script>
+
+<style>
+    .card {
+        transition: transform 0.2s;
+    }
+
+    .form-label {
+        color: #2c3e50;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #198754;
+        box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
+    }
+</style>
+</body>
+</html>
+

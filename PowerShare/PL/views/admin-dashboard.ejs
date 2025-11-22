@@ -1,0 +1,1211 @@
+<%- include('partials/head', { title: 'Admin Dashboard - PowerShare' }) %>
+
+<body class="bg-light">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="/dashboard">
+            <i class="fas fa-shield-alt"></i> PowerShare Admin
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link position-relative" href="#" onclick="showSection('notifications', event)">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge bg-danger position-absolute top-0 start-100 translate-middle" id="notificationBadge" style="display: none;">0</span>
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1"></i>
+                        <span id="userNameDisplay"><%= user.full_name || 'Admin' %></span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" href="/profile">
+                                <i class="fas fa-user me-2"></i>Profile Management
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="/logout">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 col-lg-2 px-0 bg-dark text-white sidebar">
+            <div class="d-flex flex-column p-3">
+                <ul class="nav nav-pills flex-column mb-auto">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link active text-white" onclick="showSection('dashboard', event)">
+                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                        </a>
+                    </li>
+                    <li><a href="#" class="nav-link text-white-50" onclick="showSection('users', event)">
+                            <i class="fas fa-users me-2"></i>Users
+                        </a></li>
+                    <li><a href="#" class="nav-link text-white-50" onclick="showSection('generators', event)">
+                            <i class="fas fa-industry me-2"></i>Generators
+                        </a></li>
+                    <li><a href="#" class="nav-link text-white-50" onclick="showSection('payments', event)">
+                            <i class="fas fa-credit-card me-2"></i>Payments
+                        </a></li>
+                    <li><a href="#" class="nav-link text-white-50" onclick="showSection('reports', event)">
+                            <i class="fas fa-chart-bar me-2"></i>Reports
+                        </a></li>
+                    <li><a href="#" class="nav-link text-white-50" onclick="showSection('notifications', event)">
+                            <i class="fas fa-bell me-2"></i>Notifications
+                        </a></li>
+                    <li><a href="#" class="nav-link text-white-50" onclick="showSection('settings', event)">
+                            <i class="fas fa-cog me-2"></i>System Settings
+                        </a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-9 col-lg-10 px-4 py-4">
+            <div id="dashboard-section" class="dashboard-section active">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2 class="fw-bold mb-1">System Overview</h2>
+                        <p class="text-muted mb-0">Monitor and manage the entire PowerShare platform</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="exportReport()">
+                        <i class="fas fa-download me-2"></i>Export Report
+                    </button>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm h-100 bg-gradient-primary text-white">
+                            <div class="card-body">
+                                <p class="mb-1 small opacity-75">Total Users</p>
+                                <h3 class="fw-bold mb-0" id="totalUsers">
+                                    <div class="spinner-border spinner-border-sm" role="status"></div>
+                                </h3>
+                                <small class="opacity-75" id="userGrowth">--</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm h-100 bg-gradient-success text-white">
+                            <div class="card-body">
+                                <p class="mb-1 small opacity-75">Generator Owners</p>
+                                <h3 class="fw-bold mb-0" id="totalOwners">
+                                    <div class="spinner-border spinner-border-sm" role="status"></div>
+                                </h3>
+                                <small class="opacity-75" id="ownersGrowth">--</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm h-100 bg-gradient-warning text-white">
+                            <div class="card-body">
+                                <p class="mb-1 small opacity-75">Total Revenue</p>
+                                <h3 class="fw-bold mb-0" id="totalRevenue">
+                                    <div class="spinner-border spinner-border-sm" role="status"></div>
+                                </h3>
+                                <small class="opacity-75" id="revenueGrowth">--</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm h-100 bg-gradient-danger text-white">
+                            <div class="card-body">
+                                <p class="mb-1 small opacity-75">Pending Issues</p>
+                                <h3 class="fw-bold mb-0" id="pendingIssues">
+                                    <div class="spinner-border spinner-border-sm" role="status"></div>
+                                </h3>
+                                <small class="opacity-75"><i class="fas fa-exclamation-circle"></i> Needs attention</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-lg-8">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white py-3">
+                                <h5 class="fw-bold mb-0"><i class="fas fa-chart-area me-2 text-primary"></i>Platform Growth</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="growthChart" height="80"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white py-3">
+                                <h5 class="fw-bold mb-0"><i class="fas fa-users me-2 text-info"></i>User Types</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="userTypesChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="users-section" class="dashboard-section">
+                <h2 class="fw-bold mb-4">User Management</h2>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="fw-bold mb-0"><i class="fas fa-users me-2"></i>All Users</h5>
+                            <input type="text" class="form-control w-25" placeholder="Search users..." onkeyup="searchUsers(this.value)">
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th>User ID</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                        <th>Status</th>
+                                        <th>Joined</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody">
+                                    <tr><td colspan="7" class="text-center py-4">
+                                        <div class="spinner-border text-primary"></div>
+                                    </td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="generators-section" class="dashboard-section">
+                <h2 class="fw-bold mb-4">Generator Management</h2>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="fw-bold mb-0"><i class="fas fa-industry me-2"></i>All Generators</h5>
+                            <span class="text-muted small">
+                                <i class="fas fa-info-circle me-1"></i>Only owners can create generators
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th>Generator ID</th>
+                                        <th>Name</th>
+                                        <th>Owner</th>
+                                        <th>Location</th>
+                                        <th>Capacity</th>
+                                        <th>Subscribers</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="generatorsTableBody">
+                                    <tr><td colspan="8" class="text-center py-4">
+                                        <div class="spinner-border text-primary"></div>
+                                    </td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="payments-section" class="dashboard-section">
+                <h2 class="fw-bold mb-4">Payment Management</h2>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="fw-bold mb-0"><i class="fas fa-credit-card me-2"></i>Recent Payments</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th>Payment ID</th>
+                                        <th>User</th>
+                                        <th>Bill ID</th>
+                                        <th>Amount</th>
+                                        <th>Method</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="paymentsTableBody">
+                                    <tr><td colspan="7" class="text-center py-4">
+                                        <div class="spinner-border text-primary"></div>
+                                    </td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="reports-section" class="dashboard-section">
+                <h2 class="fw-bold mb-4">Reports & Analytics</h2>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white py-3">
+                                <h5 class="fw-bold mb-0"><i class="fas fa-chart-line me-2"></i>Revenue Report</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="revenueReportChart" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white py-3">
+                                <h5 class="fw-bold mb-0"><i class="fas fa-chart-bar me-2"></i>User Growth</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="userGrowthReportChart" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white py-3">
+                                <h5 class="fw-bold mb-0"><i class="fas fa-file-export me-2"></i>Export Options</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-outline-primary" onclick="exportReport('users')">
+                                        <i class="fas fa-users me-2"></i>Export Users
+                                    </button>
+                                    <button class="btn btn-outline-success" onclick="exportReport('payments')">
+                                        <i class="fas fa-dollar-sign me-2"></i>Export Payments
+                                    </button>
+                                    <button class="btn btn-outline-info" onclick="exportReport('generators')">
+                                        <i class="fas fa-industry me-2"></i>Export Generators
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="notifications-section" class="dashboard-section">
+                <h2 class="fw-bold mb-4">Admin Notifications</h2>
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge bg-primary" id="unreadCountBadge">0 Unread</span>
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary" onclick="markAllNotificationsRead()">
+                                <i class="fas fa-check-double me-1"></i>Mark All as Read
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0" id="notificationsContainer">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="settings-section" class="dashboard-section">
+                <h2 class="fw-bold mb-4">System Settings</h2>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white py-3">
+                                <h5 class="fw-bold mb-0"><i class="fas fa-cog me-2"></i>General Settings</h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="generalSettingsForm">
+                                    <div class="mb-3">
+                                        <label class="form-label">Platform Name</label>
+                                        <input type="text" class="form-control" id="platformName" name="platform_name" value="PowerShare">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Default Currency</label>
+                                        <select class="form-select" id="defaultCurrency" name="default_currency">
+                                            <option value="USD">USD ($)</option>
+                                            <option value="EUR">EUR (€)</option>
+                                            <option value="GBP">GBP (£)</option>
+                                        </select>
+                                    </div>
+                                    <button type="button" class="btn btn-primary" onclick="saveSettings('general')">
+                                        <i class="fas fa-save me-2"></i>Save Settings
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white py-3">
+                                <h5 class="fw-bold mb-0"><i class="fas fa-bell me-2"></i>Notification Settings</h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="notificationSettingsForm">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="emailNotif" checked>
+                                        <label class="form-check-label" for="emailNotif">Email Notifications</label>
+                                    </div>
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="smsNotif">
+                                        <label class="form-check-label" for="smsNotif">SMS Notifications</label>
+                                    </div>
+                                    <button type="button" class="btn btn-primary" onclick="saveSettings('notifications')">
+                                        <i class="fas fa-save me-2"></i>Save Settings
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') %>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="/js/script.js"></script>
+
+<script>
+    function showSection(sectionName, event) {
+        if (event) event.preventDefault();
+        
+        document.querySelectorAll('.dashboard-section').forEach(s => s.classList.remove('active'));
+        
+        const target = document.getElementById(sectionName + '-section');
+        if (target) target.classList.add('active');
+        
+        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+            link.classList.remove('active', 'text-white');
+            link.classList.add('text-white-50');
+        });
+        
+        if (event) {
+            const clickedLink = event.target.closest('.nav-link');
+            if (clickedLink) {
+                clickedLink.classList.add('active', 'text-white');
+                clickedLink.classList.remove('text-white-50');
+            }
+        }
+        
+        if (sectionName === 'reports') {
+            setTimeout(initReportCharts, 100);
+        }
+        
+        if (sectionName === 'settings') {
+            loadSettings();
+        }
+        
+        if (sectionName === 'notifications') {
+            loadAdminNotifications();
+        }
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    let dashboardData = null;
+    let growthChart = null;
+    let userTypesChart = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadDashboardStats();
+        loadUsersSection();
+        loadGeneratorsSection();
+        loadPaymentsSection();
+        loadNotificationCount();
+    });
+
+    async function loadDashboardStats() {
+        try {
+            const response = await fetch('/api/admin/dashboard/stats');
+            const result = await response.json();
+            
+            if (result.success) {
+                dashboardData = result.data;
+                updateStatsCards(dashboardData.overview);
+                await loadGrowthChart();
+                updateUserTypesChart(dashboardData.user_types);
+            }
+        } catch (error) {
+            console.error('Load dashboard stats error:', error);
+            showNotification('Failed to load dashboard statistics', 'danger');
+        }
+    }
+
+    function updateStatsCards(overview) {
+        document.getElementById('totalUsers').textContent = overview.total_users.toLocaleString();
+        const userGrowthIcon = overview.user_growth.growth_percentage >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+        document.getElementById('userGrowth').innerHTML = 
+            `<i class="fas ${userGrowthIcon}"></i> ${Math.abs(overview.user_growth.growth_percentage)}% this month`;
+        
+        document.getElementById('totalOwners').textContent = overview.total_generator_owners.toLocaleString();
+        document.getElementById('ownersGrowth').innerHTML = 
+            `<i class="fas fa-arrow-up"></i> ${overview.new_users_this_week} new this week`;
+        
+        const revenue = parseFloat(overview.total_revenue);
+        document.getElementById('totalRevenue').textContent = '$' + (revenue >= 1000000 
+            ? (revenue / 1000000).toFixed(1) + 'M' 
+            : (revenue >= 1000 ? (revenue / 1000).toFixed(1) + 'K' : revenue.toFixed(0)));
+        const revGrowthIcon = overview.revenue_growth.growth_percentage >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+        document.getElementById('revenueGrowth').innerHTML = 
+            `<i class="fas ${revGrowthIcon}"></i> ${Math.abs(overview.revenue_growth.growth_percentage)}% growth`;
+        
+        document.getElementById('pendingIssues').textContent = overview.pending_issues;
+    }
+
+    async function loadGrowthChart() {
+        try {
+            const response = await fetch('/api/admin/dashboard/growth?months=11');
+            const result = await response.json();
+            
+            if (result.success) {
+                initAdminCharts(result.data);
+            }
+        } catch (error) {
+            console.error('Load growth chart error:', error);
+        }
+    }
+
+    function initAdminCharts(growthData) {
+        const growthCtx = document.getElementById('growthChart');
+        if (growthCtx) {
+            if (growthChart) growthChart.destroy();
+            
+            growthChart = new Chart(growthCtx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: growthData.labels,
+                    datasets: [
+                        {
+                            label: 'Total Users',
+                            data: growthData.users,
+                            borderColor: '#0d6efd',
+                            backgroundColor: 'rgba(13,110,253,0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Generator Owners',
+                            data: growthData.owners,
+                            borderColor: '#198754',
+                            backgroundColor: 'rgba(25,135,84,0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' }
+                    },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+    }
+
+    function updateUserTypesChart(userTypes) {
+        const userTypesCtx = document.getElementById('userTypesChart');
+        if (userTypesCtx) {
+            if (userTypesChart) userTypesChart.destroy();
+            
+            const labels = [];
+            const data = [];
+            const roleNames = {
+                'household': 'Household Users',
+                'owner': 'Generator Owners',
+                'admin': 'Admins'
+            };
+            
+            userTypes.forEach(type => {
+                labels.push(roleNames[type.role] || type.role);
+                data.push(type.count);
+            });
+            
+            userTypesChart = new Chart(userTypesCtx.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: ['#0dcaf0', '#ffc107', '#dc3545']
+                    }]
+                },
+                options: {
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+    }
+
+    let revenueChart = null;
+    let userGrowthReportChart = null;
+
+    async function initReportCharts() {
+        if (revenueChart) revenueChart.destroy();
+        if (userGrowthReportChart) userGrowthReportChart.destroy();
+
+        try {
+            const revenueResponse = await fetch('/api/admin/reports/revenue?months=11');
+            const revenueResult = await revenueResponse.json();
+            
+            if (revenueResult.success) {
+                const revenueCtx = document.getElementById('revenueReportChart');
+                if (revenueCtx) {
+                    revenueChart = new Chart(revenueCtx.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: revenueResult.data.labels,
+                            datasets: [{
+                                label: 'Revenue ($)',
+                                data: revenueResult.data.revenues,
+                                backgroundColor: 'rgba(25, 135, 84, 0.7)',
+                                borderColor: '#198754',
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: true, position: 'top' },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return 'Revenue: $' + context.parsed.y.toLocaleString();
+                                        }
+                                    }
+                                }
+                            },
+                            scales: { 
+                                y: { 
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return '$' + value.toLocaleString();
+                                        }
+                                    }
+                                } 
+                            }
+                        }
+                    });
+                }
+            }
+
+            const userGrowthResponse = await fetch('/api/admin/reports/user-growth?months=11');
+            const userGrowthResult = await userGrowthResponse.json();
+            
+            if (userGrowthResult.success) {
+                const userGrowthCtx = document.getElementById('userGrowthReportChart');
+                if (userGrowthCtx) {
+                    userGrowthReportChart = new Chart(userGrowthCtx.getContext('2d'), {
+                        type: 'line',
+                        data: {
+                            labels: userGrowthResult.data.labels,
+                            datasets: [{
+                                label: 'New Users',
+                                data: userGrowthResult.data.new_users,
+                                borderColor: '#0d6efd',
+                                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                                tension: 0.4,
+                                fill: true,
+                                pointRadius: 5,
+                                pointHoverRadius: 7
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: true, position: 'top' }
+                            },
+                            scales: { 
+                                y: { 
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return value + ' users';
+                                        }
+                                    }
+                                } 
+                            }
+                        }
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Init report charts error:', error);
+            showNotification('Failed to load report charts', 'danger');
+        }
+    }
+
+    async function exportReport(type = 'overview') {
+        try {
+            showNotification('Generating PDF report...', 'info');
+            
+            let data = [];
+            
+            if (type === 'users') {
+                const response = await fetch('/api/admin/users');
+                const result = await response.json();
+                data = result.success ? result.data : [];
+            } else if (type === 'payments') {
+                const response = await fetch('/api/admin/payments');
+                const result = await response.json();
+                data = result.success ? result.data : [];
+            } else if (type === 'generators') {
+                const response = await fetch('/api/admin/generators');
+                const result = await response.json();
+                data = result.success ? result.data : [];
+            }
+            
+            if (window.PDFUtils && window.PDFUtils.generateAdminReportPDF) {
+                window.PDFUtils.generateAdminReportPDF(type, data);
+                showNotification('Report exported successfully!', 'success');
+            } else {
+                showNotification('PDF export functionality not available', 'warning');
+            }
+        } catch (error) {
+            console.error('Export error:', error);
+            showNotification('Failed to export report: ' + error.message, 'danger');
+        }
+    }
+
+    async function loadUsersSection() {
+        try {
+            const response = await fetch('/api/admin/users');
+            const data = await response.json();
+            
+            const tbody = document.getElementById('usersTableBody');
+            if (!data.success || !data.data || data.data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">No users found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = data.data.map(user => `
+                <tr>
+                    <td>#${user.user_id}</td>
+                    <td>${user.full_name}</td>
+                    <td>${user.email}</td>
+                    <td><span class="badge bg-info">${capitalizeFirst(user.role)}</span></td>
+                    <td><span class="badge bg-${getStatusColor(user.status || 'active')}">${capitalizeFirst(user.status || 'active')}</span></td>
+                    <td>${formatDate(user.created_at)}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewUser(${user.user_id})" title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        ${user.subscription_count > 0 ? `<span class="badge bg-info ms-1">${user.subscription_count} subs</span>` : ''}
+                        ${user.pending_bills > 0 ? `<span class="badge bg-warning ms-1">${user.pending_bills} pending</span>` : ''}
+                    </td>
+                </tr>
+            `).join('');
+        } catch (error) {
+            console.error('Load users error:', error);
+            document.getElementById('usersTableBody').innerHTML = 
+                '<tr><td colspan="7" class="text-center text-danger py-4">Error loading users</td></tr>';
+        }
+    }
+
+    async function loadGeneratorsSection() {
+        try {
+            const response = await fetch('/api/admin/generators');
+            const data = await response.json();
+            
+            const tbody = document.getElementById('generatorsTableBody');
+            if (!data.success || !data.data || data.data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4">No generators found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = data.data.map(gen => `
+                <tr>
+                    <td>#${gen.generator_id}</td>
+                    <td>${gen.generator_name || 'N/A'}</td>
+                    <td>${gen.owner_name || 'N/A'}</td>
+                    <td>${gen.location || 'N/A'}</td>
+                    <td>${gen.capacity_kw || 'N/A'} kW</td>
+                    <td>
+                        ${gen.active_subscribers || 0}/${gen.subscriber_count || 0}
+                        ${gen.active_subscribers > 0 ? '<i class="fas fa-check-circle text-success"></i>' : ''}
+                    </td>
+                    <td><span class="badge ${gen.status === 'active' ? 'bg-success' : 'bg-secondary'}">${capitalizeFirst(gen.status || 'active')}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewGenerator(${gen.generator_id})" title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        ${gen.total_revenue > 0 ? `<small class="text-success ms-1">$${parseFloat(gen.total_revenue).toFixed(0)}</small>` : ''}
+                    </td>
+                </tr>
+            `).join('');
+        } catch (error) {
+            console.error('Load generators error:', error);
+            document.getElementById('generatorsTableBody').innerHTML = 
+                '<tr><td colspan="8" class="text-center text-danger py-4">Error loading generators</td></tr>';
+        }
+    }
+
+    async function loadPaymentsSection() {
+        try {
+            const response = await fetch('/api/admin/payments');
+            const data = await response.json();
+            
+            const tbody = document.getElementById('paymentsTableBody');
+            if (!data.success || !data.data || data.data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">No payments found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = data.data.slice(0, 50).map(payment => `
+                <tr>
+                    <td>#${payment.payment_id}</td>
+                    <td>
+                        ${payment.user_name || 'N/A'}
+                        <br><small class="text-muted">${payment.generator_name || ''}</small>
+                    </td>
+                    <td>#${payment.bill_id}</td>
+                    <td class="fw-bold">$${parseFloat(payment.amount).toFixed(2)}</td>
+                    <td>
+                        <span class="badge ${payment.payment_method === 'credit_card' ? 'bg-primary' : 'bg-info'}">
+                            ${capitalizeFirst(payment.payment_method.replace('_', ' '))}
+                        </span>
+                    </td>
+                    <td>${formatDate(payment.payment_date)}</td>
+                    <td><span class="badge ${payment.status === 'completed' ? 'bg-success' : 'bg-warning'}">${capitalizeFirst(payment.status)}</span></td>
+                </tr>
+            `).join('');
+        } catch (error) {
+            console.error('Load payments error:', error);
+            document.getElementById('paymentsTableBody').innerHTML = 
+                '<tr><td colspan="7" class="text-center text-danger py-4">Error loading payments</td></tr>';
+        }
+    }
+
+    function searchUsers(term) {
+        const tbody = document.getElementById('usersTableBody');
+        const rows = tbody.getElementsByTagName('tr');
+        
+        for (let row of rows) {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(term.toLowerCase()) ? '' : 'none';
+        }
+    }
+
+    function viewUser(userId) {
+        window.location.href = `/admin/users/${userId}`;
+    }
+
+    function viewGenerator(genId) {
+        window.location.href = `/admin/generators/${genId}`;
+    }
+
+    async function saveSettings(type) {
+        try {
+            let settings = {};
+            
+            if (type === 'general') {
+                const platformName = document.getElementById('platformName');
+                const currency = document.getElementById('defaultCurrency');
+                settings = {
+                    platform_name: platformName.value,
+                    default_currency: currency.value
+                };
+            } else if (type === 'notifications') {
+                const emailNotif = document.getElementById('emailNotif');
+                const smsNotif = document.getElementById('smsNotif');
+                settings = {
+                    email_notifications: emailNotif.checked,
+                    sms_notifications: smsNotif.checked
+                };
+            }
+            
+            const response = await fetch('/api/admin/settings', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(settings)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showNotification(`${capitalizeFirst(type)} settings saved successfully!`, 'success');
+            } else {
+                showNotification('Failed to save settings', 'danger');
+            }
+        } catch (error) {
+            console.error('Save settings error:', error);
+            showNotification('Failed to save settings', 'danger');
+        }
+    }
+    
+    async function loadSettings() {
+        try {
+            const response = await fetch('/api/admin/settings');
+            const result = await response.json();
+            
+            if (result.success) {
+                const settings = result.data;
+                
+                const platformNameInput = document.getElementById('platformName');
+                const currencySelect = document.getElementById('defaultCurrency');
+                
+                if (platformNameInput && settings.platform_name) {
+                    platformNameInput.value = settings.platform_name;
+                }
+                
+                if (currencySelect && settings.default_currency) {
+                    currencySelect.value = settings.default_currency;
+                }
+                
+                const emailNotif = document.getElementById('emailNotif');
+                const smsNotif = document.getElementById('smsNotif');
+                
+                if (emailNotif) {
+                    emailNotif.checked = settings.email_notifications || false;
+                }
+                if (smsNotif) {
+                    smsNotif.checked = settings.sms_notifications || false;
+                }
+            }
+        } catch (error) {
+            console.error('Load settings error:', error);
+        }
+    }
+    
+    async function loadNotificationCount() {
+        try {
+            const response = await fetch('/api/notifications/count');
+            const result = await response.json();
+            
+            if (result.success && result.data && result.data.count > 0) {
+                const badge = document.getElementById('notificationBadge');
+                badge.textContent = result.data.count;
+                badge.style.display = 'inline-block';
+            }
+        } catch (error) {
+            console.error('Load notification count error:', error);
+        }
+    }
+    
+    async function loadAdminNotifications() {
+        try {
+            const response = await fetch('/api/notifications/');
+            const result = await response.json();
+            
+            const container = document.getElementById('notificationsContainer');
+            const unreadBadge = document.getElementById('unreadCountBadge');
+            
+            if (!result.success || !result.data || result.data.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No notifications</h5>
+                        <p class="text-muted">You're all caught up!</p>
+                    </div>
+                `;
+                unreadBadge.textContent = '0 Unread';
+                return;
+            }
+            
+            const notifications = result.data;
+            const unreadCount = notifications.filter(n => !n.is_read).length;
+            unreadBadge.textContent = `${unreadCount} Unread`;
+            
+            container.innerHTML = `
+                <div class="list-group list-group-flush">
+                    ${notifications.map(notif => `
+                        <div class="list-group-item list-group-item-action ${!notif.is_read ? 'bg-light' : ''}" 
+                             onclick="markNotificationRead(${notif.notification_id})"
+                             style="cursor: pointer;">
+                            <div class="d-flex w-100 justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center mb-1">
+                                        <h6 class="mb-0 ${!notif.is_read ? 'fw-bold' : ''}">
+                                            ${getNotificationIcon(notif.type)} ${notif.title}
+                                        </h6>
+                                        ${!notif.is_read ? '<span class="badge bg-primary ms-2">New</span>' : ''}
+                                    </div>
+                                    <p class="mb-1 text-muted small">${notif.message}</p>
+                                    <small class="text-muted">
+                                        <i class="far fa-clock me-1"></i>${formatDate(notif.created_at)}
+                                    </small>
+                                </div>
+                                <button class="btn btn-sm btn-outline-danger ms-2" 
+                                        onclick="deleteNotification(${notif.notification_id}, event)"
+                                        title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        } catch (error) {
+            console.error('Load admin notifications error:', error);
+            document.getElementById('notificationsContainer').innerHTML = `
+                <div class="alert alert-danger m-3">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    Failed to load notifications
+                </div>
+            `;
+        }
+    }
+    
+    function getNotificationIcon(type) {
+        const icons = {
+            'outage': '<i class="fas fa-power-off text-danger"></i>',
+            'bill': '<i class="fas fa-file-invoice-dollar text-warning"></i>',
+            'payment': '<i class="fas fa-credit-card text-success"></i>',
+            'system': '<i class="fas fa-info-circle text-info"></i>',
+            'info': '<i class="fas fa-info-circle text-info"></i>',
+            'warning': '<i class="fas fa-exclamation-triangle text-warning"></i>',
+            'success': '<i class="fas fa-check-circle text-success"></i>',
+            'error': '<i class="fas fa-times-circle text-danger"></i>'
+        };
+        return icons[type] || icons['info'];
+    }
+    
+    async function markNotificationRead(notificationId) {
+        try {
+            await fetch(`/api/notifications/${notificationId}/read`, {
+                method: 'PUT'
+            });
+            
+            await loadAdminNotifications();
+            await loadNotificationCount();
+        } catch (error) {
+            console.error('Mark as read error:', error);
+        }
+    }
+    
+    async function markAllNotificationsRead() {
+        try {
+            const response = await fetch('/api/notifications/read-all', {
+                method: 'PUT'
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showNotification('All notifications marked as read', 'success');
+                await loadAdminNotifications();
+                await loadNotificationCount();
+            }
+        } catch (error) {
+            console.error('Mark all as read error:', error);
+            showNotification('Failed to mark notifications as read', 'danger');
+        }
+    }
+    
+    async function deleteNotification(notificationId, event) {
+        event.stopPropagation(); 
+        
+        if (!confirm('Are you sure you want to delete this notification?')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/notifications/${notificationId}`, {
+                method: 'DELETE'
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showNotification('Notification deleted', 'success');
+                await loadAdminNotifications();
+                await loadNotificationCount();
+            }
+        } catch (error) {
+            console.error('Delete notification error:', error);
+            showNotification('Failed to delete notification', 'danger');
+        }
+    }
+
+   
+    function convertToCSV(data, headers) {
+        if (!data || data.length === 0) return '';
+
+        const headerRow = headers.join(',');
+
+        const dataRows = data.map(row => {
+            return headers.map(header => {
+                let value = row[header];
+                if (value === null || value === undefined) value = '';
+                value = String(value).replace(/"/g, '""');
+                if (value.includes(',') || value.includes('\n')) {
+                    value = `"${value}"`;
+                }
+                return value;
+            }).join(',');
+        }).join('\n');
+
+        return `${headerRow}\n${dataRows}`;
+    }
+
+    function downloadCSV(csv, filename) {
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showNotification('Export completed successfully!', 'success');
+    }
+
+    async function exportUsers() {
+        try {
+            const response = await fetch('/api/admin/users');
+            const result = await response.json();
+
+            if (!result.success || !result.data || result.data.length === 0) {
+                showNotification('No users to export', 'warning');
+                return;
+            }
+
+            const csv = convertToCSV(result.data, ['user_id', 'full_name', 'email', 'phone', 'role', 'status', 'created_at']);
+            downloadCSV(csv, `users_export_${new Date().toISOString().split('T')[0]}.csv`);
+        } catch (error) {
+            console.error('Export users error:', error);
+            showNotification('Failed to export users', 'danger');
+        }
+    }
+
+    async function exportGenerators() {
+        try {
+            const response = await fetch('/api/admin/generators');
+            const result = await response.json();
+
+            if (!result.success || !result.data || result.data.length === 0) {
+                showNotification('No generators to export', 'warning');
+                return;
+            }
+
+            const csv = convertToCSV(result.data, ['generator_id', 'generator_name', 'owner_name', 'location', 'capacity_kw', 'status', 'subscriber_count', 'total_revenue']);
+            downloadCSV(csv, `generators_export_${new Date().toISOString().split('T')[0]}.csv`);
+        } catch (error) {
+            console.error('Export generators error:', error);
+            showNotification('Failed to export generators', 'danger');
+        }
+    }
+
+    async function exportPayments() {
+        try {
+            const response = await fetch('/api/admin/payments');
+            const result = await response.json();
+
+            if (!result.success || !result.data || result.data.length === 0) {
+                showNotification('No payments to export', 'warning');
+                return;
+            }
+
+            const csv = convertToCSV(result.data, ['payment_id', 'user_name', 'generator_name', 'amount', 'payment_method', 'payment_date', 'status']);
+            downloadCSV(csv, `payments_export_${new Date().toISOString().split('T')[0]}.csv`);
+        } catch (error) {
+            console.error('Export payments error:', error);
+            showNotification('Failed to export payments', 'danger');
+        }
+    }
+
+    async function exportReport() {
+        try {
+            const statsResponse = await fetch('/api/admin/dashboard/stats');
+            const statsResult = await statsResponse.json();
+
+            if (!statsResult.success) {
+                showNotification('Failed to load dashboard statistics', 'danger');
+                return;
+            }
+
+            const report = [];
+            const overview = statsResult.data.overview;
+
+            report.push(['PowerShare Platform Report']);
+            report.push(['Generated on:', new Date().toLocaleString()]);
+            report.push([]);
+            report.push(['Metric', 'Value']);
+            report.push(['Total Users', overview.total_users]);
+            report.push(['Generator Owners', overview.total_generator_owners]);
+            report.push(['Total Revenue', `$${overview.total_revenue}`]);
+            report.push(['Pending Issues', overview.pending_issues]);
+            report.push(['New Users This Week', overview.new_users_this_week]);
+            report.push(['User Growth %', `${overview.user_growth.growth_percentage}%`]);
+            report.push(['Revenue Growth %', `${overview.revenue_growth.growth_percentage}%`]);
+
+            const csv = report.map(row => row.join(',')).join('\n');
+            downloadCSV(csv, `dashboard_report_${new Date().toISOString().split('T')[0]}.csv`);
+        } catch (error) {
+            console.error('Export report error:', error);
+            showNotification('Failed to export report', 'danger');
+        }
+    }
+
+    function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        notification.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 5000);
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return '--';
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    }
+    
+    function getStatusColor(status) {
+        const colors = {
+            'active': 'success',
+            'suspended': 'warning',
+            'inactive': 'secondary',
+            'pending': 'info',
+            'completed': 'success',
+            'failed': 'danger'
+        };
+        return colors[status] || 'secondary';
+    }
+
+    function capitalizeFirst(str) {
+        if (!str) return '';
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+</script>
+</body>
+</html>
