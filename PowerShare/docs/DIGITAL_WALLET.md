@@ -181,7 +181,7 @@ CREATE TABLE wallet_top_up_methods (
     method_code VARCHAR(50) NOT NULL UNIQUE,
     method_name VARCHAR(100) NOT NULL,
     description TEXT,
-    fee_type ENUM('flat', 'percentage') DEFAULT 'flat',
+    fee_type ENUM('fixed', 'percentage', 'none') DEFAULT 'none',
     fee_flat DECIMAL(10, 2) DEFAULT 0.00,
     fee_percentage DECIMAL(5, 2) DEFAULT 0.00,
     min_amount DECIMAL(10, 2) DEFAULT 1.00,

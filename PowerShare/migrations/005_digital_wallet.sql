@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS wallet_top_up_methods (
 
     -- Fees
     fee_type ENUM('fixed', 'percentage', 'none') DEFAULT 'none',
-    fee_amount DECIMAL(10, 2) DEFAULT 0.00,
+    fee_flat DECIMAL(10, 2) DEFAULT 0.00,
     fee_percentage DECIMAL(5, 2) DEFAULT 0.00,
 
     -- Processing time
@@ -173,7 +173,7 @@ CREATE TABLE IF NOT EXISTS wallet_transfers (
 
     -- Description
     description TEXT,
-    message TEXT, -- Message from sender
+    note TEXT, -- Note from sender
 
     -- Related transactions
     sender_transaction_id INT NULL,
@@ -202,7 +202,7 @@ CREATE TABLE IF NOT EXISTS wallet_transfers (
 
 INSERT INTO wallet_top_up_methods
 (method_code, method_name, description, method_type, is_active, min_amount, max_amount,
- fee_type, processing_time, supported_currencies, display_order, instructions)
+ fee_type, fee_flat, fee_percentage, processing_time, supported_currencies, display_order, instructions)
 VALUES
 (
     'credit_card',
@@ -213,6 +213,8 @@ VALUES
     5.00,
     5000.00,
     'percentage',
+    0.00,
+    2.50,
     'Instant',
     '["USD", "EUR"]',
     1,
@@ -227,6 +229,8 @@ VALUES
     10.00,
     50000.00,
     'none',
+    0.00,
+    0.00,
     '1-3 business days',
     '["USD", "LBP", "EUR"]',
     2,
@@ -241,6 +245,8 @@ VALUES
     5.00,
     10000.00,
     'none',
+    0.00,
+    0.00,
     'Instant upon verification',
     '["USD", "LBP", "EUR"]',
     3,
@@ -255,6 +261,8 @@ VALUES
     5.00,
     5000.00,
     'fixed',
+    1.00,
+    0.00,
     'Instant',
     '["USD", "LBP"]',
     4,
@@ -269,6 +277,8 @@ VALUES
     5.00,
     5000.00,
     'fixed',
+    1.00,
+    0.00,
     'Instant',
     '["USD", "LBP"]',
     5,
