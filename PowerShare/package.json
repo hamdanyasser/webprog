@@ -31,6 +31,7 @@
     "libretranslate": "^1.0.1",
     "multer": "^2.0.2",
     "mysql2": "^3.6.0",
+    "node-cron": "^3.0.3",
     "nodemailer": "^7.0.10"
   },
   "devDependencies": {

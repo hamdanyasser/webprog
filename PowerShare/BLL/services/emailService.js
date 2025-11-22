@@ -82,6 +82,29 @@ class EmailService {
     }
 
     /**
+     * Send bill notification email
+     */
+    async sendBillNotification(userEmail, userName, billData) {
+        const billUrl = `${process.env.APP_URL || 'http://localhost:3000'}/billing`;
+
+        const mailOptions = {
+            from: `"PowerShare" <${process.env.SMTP_USER}>`,
+            to: userEmail,
+            subject: `💵 New Bill Available - $${billData.amount}`,
+            html: this.getBillNotificationTemplate(userName, billData, billUrl)
+        };
+
+        try {
+            const info = await this.transporter.sendMail(mailOptions);
+            console.log('✅ Bill notification email sent:', info.messageId);
+            return { success: true, messageId: info.messageId };
+        } catch (error) {
+            console.error('❌ Error sending bill notification email:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
      * HTML template for email verification
      */
     getVerificationEmailTemplate(userName, verificationUrl) {
@@ -268,6 +291,105 @@ class EmailService {
                         <td style="background-color: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #eeeeee;">
                             <p style="color: #999999; font-size: 12px; margin: 0;">
                                 © ${new Date().getFullYear()} PowerShare. Making electricity sharing easy in Lebanon.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+        `;
+    }
+
+    /**
+     * HTML template for bill notification
+     */
+    getBillNotificationTemplate(userName, billData, billUrl) {
+        return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Bill Available</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4; padding: 20px;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #6366F1, #8B5CF6); padding: 40px 20px; text-align: center;">
+                            <h1 style="color: #ffffff; margin: 0; font-size: 28px;">💵 New Bill Available</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 40px 30px;">
+                            <h2 style="color: #333333; margin: 0 0 20px 0;">Hi ${userName},</h2>
+                            <p style="color: #666666; line-height: 1.6; margin: 0 0 20px 0;">
+                                Your new bill for <strong>${billData.generator_name}</strong> is now available.
+                            </p>
+
+                            <!-- Bill Details Card -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8f9fa; border-radius: 8px; margin: 30px 0;">
+                                <tr>
+                                    <td style="padding: 25px;">
+                                        <table width="100%" cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td style="padding: 10px 0;">
+                                                    <strong style="color: #666;">Plan:</strong>
+                                                </td>
+                                                <td align="right" style="padding: 10px 0;">
+                                                    <span style="color: #333;">${billData.plan_name}</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 10px 0; border-top: 1px solid #e0e0e0;">
+                                                    <strong style="color: #666;">Amount:</strong>
+                                                </td>
+                                                <td align="right" style="padding: 10px 0; border-top: 1px solid #e0e0e0;">
+                                                    <span style="color: #10B981; font-size: 24px; font-weight: bold;">$${billData.amount}</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 10px 0; border-top: 1px solid #e0e0e0;">
+                                                    <strong style="color: #666;">Due Date:</strong>
+                                                </td>
+                                                <td align="right" style="padding: 10px 0; border-top: 1px solid #e0e0e0;">
+                                                    <span style="color: #EF4444; font-weight: bold;">${billData.due_date}</span>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td align="center" style="padding: 20px 0;">
+                                        <a href="${billUrl}" style="display: inline-block; background: linear-gradient(135deg, #6366F1, #8B5CF6); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 6px; font-weight: bold; font-size: 16px;">
+                                            💳 View & Pay Bill
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <div style="background-color: #FEF3C7; border-left: 4px solid #F59E0B; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                                <p style="margin: 0; color: #92400E; font-size: 14px;">
+                                    <strong>💡 Tip:</strong> Pay before the due date to earn loyalty points and avoid late fees!
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background-color: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #eeeeee;">
+                            <p style="color: #999999; font-size: 12px; margin: 0 0 10px 0;">
+                                Questions? Contact your generator owner or visit our help center.
+                            </p>
+                            <p style="color: #999999; font-size: 12px; margin: 0;">
+                                © ${new Date().getFullYear()} PowerShare. All rights reserved.
                             </p>
                         </td>
                     </tr>

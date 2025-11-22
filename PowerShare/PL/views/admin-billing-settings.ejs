@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('partials/head') %>
+    <title>Billing Automation Settings - Admin - PowerShare</title>
+</head>
+<body>
+    <%- include('partials/navbar') %>
+
+    <div class="container my-5">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h2 mb-0">🤖 Billing Automation Settings</h1>
+                <p class="text-muted">Configure automated monthly bill generation and notifications</p>
+            </div>
+            <a href="/dashboard" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+
+        <!-- Success/Error Messages -->
+        <div id="alert-container"></div>
+
+        <!-- Automated Billing Settings -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-robot"></i> Automated Billing Configuration</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Enable Automated Billing</label>
+                        <select class="form-select" id="automated_billing_enabled">
+                            <option value="true">Enabled</option>
+                            <option value="false">Disabled</option>
+                        </select>
+                        <small class="text-muted">Automatically generate bills on the 1st of each month</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Billing Day of Month</label>
+                        <input type="number" class="form-control" id="billing_day_of_month" min="1" max="28" step="1">
+                        <small class="text-muted">Day of month to generate bills (1-28)</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Payment Due Days</label>
+                        <input type="number" class="form-control" id="payment_due_days" min="1" max="30" step="1">
+                        <small class="text-muted">Days after billing period end that payment is due</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Payment Reminder Days</label>
+                        <input type="number" class="form-control" id="billing_reminder_days_before" min="1" max="14" step="1">
+                        <small class="text-muted">Days before due date to send payment reminders</small>
+                    </div>
+                </div>
+                <div class="alert alert-info mb-0">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Note:</strong> Automated billing runs via cron job. Ensure the cron job is set up correctly for this to work.
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Settings -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-bell"></i> Bill Notification Settings</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Email Notifications</label>
+                        <select class="form-select" id="send_bill_email_notifications">
+                            <option value="true">Enabled</option>
+                            <option value="false">Disabled</option>
+                        </select>
+                        <small class="text-muted">Send email when bills are generated</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">SMS Notifications</label>
+                        <select class="form-select" id="send_bill_sms_notifications">
+                            <option value="true">Enabled</option>
+                            <option value="false">Disabled</option>
+                        </select>
+                        <small class="text-muted">Send SMS when bills are generated (requires SMS service)</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Overdue Check</label>
+                        <select class="form-select" id="overdue_check_enabled">
+                            <option value="true">Enabled</option>
+                            <option value="false">Disabled</option>
+                        </select>
+                        <small class="text-muted">Automatically check and mark bills as overdue</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manual Actions -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-hand-pointer"></i> Manual Bill Generation</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-3">Manually trigger bill generation for all active subscriptions right now:</p>
+                <button type="button" class="btn btn-warning" onclick="generateMonthlyBills()">
+                    <i class="fas fa-play"></i> Generate Monthly Bills Now
+                </button>
+                <div id="generation-result" class="mt-3"></div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="text-end mb-4">
+            <button type="button" class="btn btn-secondary me-2" onclick="loadSettings()">
+                <i class="fas fa-undo"></i> Reset
+            </button>
+            <button type="button" class="btn btn-primary" onclick="saveAllSettings()">
+                <i class="fas fa-save"></i> Save All Settings
+            </button>
+        </div>
+
+        <!-- Statistics -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Billing Statistics (Current Month)</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center" id="stats-container">
+                    <div class="col-md-12">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>
+
+    <script>
+        let currentSettings = {};
+
+        async function loadSettings() {
+            try {
+                const response = await fetch('/api/bills/automation/settings', {
+                    credentials: 'include'
+                });
+
+                if (!response.ok) throw new Error('Failed to load settings');
+
+                const data = await response.json();
+                currentSettings = data.data;
+
+                // Map settings to form fields
+                document.getElementById('automated_billing_enabled').value = currentSettings.automatedBillingEnabled?.toString() || 'true';
+                document.getElementById('billing_day_of_month').value = currentSettings.billingDayOfMonth || 1;
+                document.getElementById('payment_due_days').value = currentSettings.paymentDueDays || 7;
+                document.getElementById('send_bill_email_notifications').value = currentSettings.sendEmailNotifications?.toString() || 'true';
+                document.getElementById('send_bill_sms_notifications').value = currentSettings.sendSmsNotifications?.toString() || 'false';
+
+                // Try to load additional settings
+                const settingsResponse = await fetch('/api/loyalty/settings', {
+                    credentials: 'include'
+                });
+
+                if (settingsResponse.ok) {
+                    const settingsData = await settingsResponse.json();
+                    const allSettings = settingsData.data.settings;
+
+                    if (allSettings.billing_reminder_days_before) {
+                        document.getElementById('billing_reminder_days_before').value = allSettings.billing_reminder_days_before;
+                    }
+                    if (allSettings.overdue_check_enabled !== undefined) {
+                        document.getElementById('overdue_check_enabled').value = allSettings.overdue_check_enabled.toString();
+                    }
+                }
+
+                showAlert('Settings loaded successfully', 'success');
+            } catch (error) {
+                console.error('Error loading settings:', error);
+                showAlert('Failed to load settings', 'danger');
+            }
+        }
+
+        async function saveAllSettings() {
+            try {
+                const settingsToUpdate = {
+                    'automated_billing_enabled': document.getElementById('automated_billing_enabled').value === 'true',
+                    'billing_day_of_month': parseInt(document.getElementById('billing_day_of_month').value),
+                    'payment_due_days': parseInt(document.getElementById('payment_due_days').value),
+                    'send_bill_email_notifications': document.getElementById('send_bill_email_notifications').value === 'true',
+                    'send_bill_sms_notifications': document.getElementById('send_bill_sms_notifications').value === 'true',
+                    'billing_reminder_days_before': parseInt(document.getElementById('billing_reminder_days_before').value),
+                    'overdue_check_enabled': document.getElementById('overdue_check_enabled').value === 'true'
+                };
+
+                for (const [key, value] of Object.entries(settingsToUpdate)) {
+                    await fetch('/api/loyalty/settings', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            setting_key: key,
+                            setting_value: value
+                        }),
+                        credentials: 'include'
+                    });
+                }
+
+                showAlert('All settings saved successfully!', 'success');
+                await loadStatistics();
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                showAlert('Failed to save settings', 'danger');
+            }
+        }
+
+        async function generateMonthlyBills() {
+            if (!confirm('Are you sure you want to generate bills for all active subscriptions right now?')) {
+                return;
+            }
+
+            const resultDiv = document.getElementById('generation-result');
+            resultDiv.innerHTML = '<div class="spinner-border spinner-border-sm text-warning" role="status"></div> Generating bills...';
+
+            try {
+                const response = await fetch('/api/bills/automation/generate-monthly', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+
+                if (!response.ok) throw new Error('Failed to generate bills');
+
+                const data = await response.json();
+
+                resultDiv.innerHTML = `
+                    <div class="alert alert-success">
+                        <h6><i class="fas fa-check-circle"></i> Bill Generation Complete</h6>
+                        <ul class="mb-0">
+                            <li><strong>Generated:</strong> ${data.data.generated} bills</li>
+                            <li><strong>Skipped:</strong> ${data.data.skipped} (already exist)</li>
+                            <li><strong>Errors:</strong> ${data.data.errors.length}</li>
+                            <li><strong>Duration:</strong> ${data.data.duration}s</li>
+                        </ul>
+                    </div>
+                `;
+
+                await loadStatistics();
+            } catch (error) {
+                console.error('Error generating bills:', error);
+                resultDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle"></i> Failed to generate bills: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function loadStatistics() {
+            try {
+                const response = await fetch('/api/bills/automation/statistics', {
+                    credentials: 'include'
+                });
+
+                if (!response.ok) throw new Error('Failed to load statistics');
+
+                const data = await response.json();
+                const stats = data.data;
+
+                document.getElementById('stats-container').innerHTML = `
+                    <div class="col-md-3">
+                        <h3 class="text-primary">${stats.total_bills || 0}</h3>
+                        <p class="text-muted small mb-0">Total Bills</p>
+                    </div>
+                    <div class="col-md-2">
+                        <h3 class="text-warning">${stats.pending_bills || 0}</h3>
+                        <p class="text-muted small mb-0">Pending</p>
+                    </div>
+                    <div class="col-md-2">
+                        <h3 class="text-success">${stats.paid_bills || 0}</h3>
+                        <p class="text-muted small mb-0">Paid</p>
+                    </div>
+                    <div class="col-md-2">
+                        <h3 class="text-danger">${stats.overdue_bills || 0}</h3>
+                        <p class="text-muted small mb-0">Overdue</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h3 class="text-info">$${(stats.total_amount || 0).toFixed(2)}</h3>
+                        <p class="text-muted small mb-0">Total Amount</p>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+                document.getElementById('stats-container').innerHTML = `
+                    <div class="col-12">
+                        <p class="text-muted">Failed to load statistics</p>
+                    </div>
+                `;
+            }
+        }
+
+        function showAlert(message, type) {
+            const container = document.getElementById('alert-container');
+            container.innerHTML = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+            loadStatistics();
+        });
+    </script>
+</body>
+</html>
