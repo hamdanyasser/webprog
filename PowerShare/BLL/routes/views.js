@@ -1,17 +1,76 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate, authenticateView, authorize } = require('../middleware/auth');
+const jwtService = require('../security/jwt');
+const userDAL = require('../../DAL/userDAL');
 
-router.get('/', (req, res) => {
-    res.render('index', { title: 'PowerShare - Home' });
+// Root route - redirect to dashboard if logged in
+router.get('/', async (req, res) => {
+    try {
+        const token = req.cookies.token;
+
+        if (token) {
+            const decoded = jwtService.verifyToken(token);
+            if (decoded) {
+                const user = await userDAL.findById(decoded.userId);
+                if (user) {
+                    // User is logged in, redirect to dashboard
+                    return res.redirect('/dashboard');
+                }
+            }
+        }
+
+        // User is not logged in, show home page
+        res.render('index', { title: 'PowerShare - Home' });
+    } catch (error) {
+        res.render('index', { title: 'PowerShare - Home' });
+    }
 });
 
-router.get('/login', (req, res) => {
-    res.render('login', { title: 'Login - PowerShare' });
+// Login page - redirect to dashboard if already logged in
+router.get('/login', async (req, res) => {
+    try {
+        const token = req.cookies.token;
+
+        if (token) {
+            const decoded = jwtService.verifyToken(token);
+            if (decoded) {
+                const user = await userDAL.findById(decoded.userId);
+                if (user) {
+                    // User is already logged in, redirect to dashboard
+                    return res.redirect('/dashboard');
+                }
+            }
+        }
+
+        // User is not logged in, show login page
+        res.render('login', { title: 'Login - PowerShare' });
+    } catch (error) {
+        res.render('login', { title: 'Login - PowerShare' });
+    }
 });
 
-router.get('/register', (req, res) => {
-    res.render('register', { title: 'Register - PowerShare' });
+// Register page - redirect to dashboard if already logged in
+router.get('/register', async (req, res) => {
+    try {
+        const token = req.cookies.token;
+
+        if (token) {
+            const decoded = jwtService.verifyToken(token);
+            if (decoded) {
+                const user = await userDAL.findById(decoded.userId);
+                if (user) {
+                    // User is already logged in, redirect to dashboard
+                    return res.redirect('/dashboard');
+                }
+            }
+        }
+
+        // User is not logged in, show register page
+        res.render('register', { title: 'Register - PowerShare' });
+    } catch (error) {
+        res.render('register', { title: 'Register - PowerShare' });
+    }
 });
 
 router.get('/verify-email', (req, res) => {
