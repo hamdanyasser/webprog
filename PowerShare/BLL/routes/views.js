@@ -50,6 +50,18 @@ router.get('/login', async (req, res) => {
     }
 });
 
+// 2FA Verification page
+router.get('/verify-2fa', (req, res) => {
+    const userId = req.query.userId;
+    if (!userId) {
+        return res.redirect('/login');
+    }
+    res.render('verify-2fa', {
+        title: 'Two-Factor Authentication - PowerShare',
+        userId
+    });
+});
+
 // Register page - redirect to dashboard if already logged in
 router.get('/register', async (req, res) => {
     try {

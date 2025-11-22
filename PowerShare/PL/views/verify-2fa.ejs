@@ -1,0 +1,273 @@
+<%- include('partials/head') %>
+
+<div class="min-vh-100 d-flex align-items-center justify-content-center bg-light">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="card shadow-lg border-0">
+                    <div class="card-body p-5">
+                        <div class="text-center mb-4">
+                            <div class="mb-3">
+                                <i class="fas fa-shield-alt" style="font-size: 60px; color: #ef4444;"></i>
+                            </div>
+                            <h2 class="fw-bold mb-2">Two-Factor Authentication</h2>
+                            <p class="text-muted">Enter the 6-digit code sent to your email</p>
+                        </div>
+
+                        <!-- 2FA Code Form -->
+                        <form id="verify2faForm">
+                            <input type="hidden" id="userId" name="userId" value="<%= userId %>">
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Verification Code</label>
+                                <input type="text" class="form-control form-control-lg text-center"
+                                       id="code" name="code" maxlength="6"
+                                       pattern="[0-9]{6}" required
+                                       style="letter-spacing: 10px; font-size: 28px; font-family: monospace;"
+                                       placeholder="000000" autocomplete="off">
+                                <small class="text-muted">Code expires in 10 minutes</small>
+                            </div>
+
+                            <div class="form-check mb-4">
+                                <input class="form-check-input" type="checkbox" id="rememberDevice" name="rememberDevice">
+                                <label class="form-check-label" for="rememberDevice">
+                                    <strong>Trust this device for 30 days</strong>
+                                    <small class="d-block text-muted">You won't be asked for a code on this device</small>
+                                </label>
+                            </div>
+
+                            <div id="errorMessage" class="alert alert-danger d-none"></div>
+
+                            <button type="submit" class="btn btn-danger btn-lg w-100 mb-3" id="verifyBtn">
+                                <i class="fas fa-check-circle me-2"></i>Verify & Continue
+                            </button>
+                        </form>
+
+                        <!-- Backup Code Toggle -->
+                        <div class="text-center mb-3">
+                            <button class="btn btn-link text-decoration-none" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#backupCodeSection">
+                                <i class="fas fa-key me-1"></i>Use backup code instead
+                            </button>
+                        </div>
+
+                        <!-- Backup Code Form (Hidden by default) -->
+                        <div class="collapse" id="backupCodeSection">
+                            <hr class="my-4">
+                            <form id="verifyBackupForm">
+                                <input type="hidden" name="userId" value="<%= userId %>">
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Backup Recovery Code</label>
+                                    <input type="text" class="form-control text-center"
+                                           id="backupCode" name="backupCode"
+                                           placeholder="Enter 8-character backup code"
+                                           maxlength="8" required
+                                           style="letter-spacing: 4px; font-family: monospace; text-transform: uppercase;">
+                                    <small class="text-muted">Use one of your backup codes if you can't access your email</small>
+                                </div>
+
+                                <div id="backupErrorMessage" class="alert alert-danger d-none"></div>
+
+                                <button type="submit" class="btn btn-warning btn-lg w-100">
+                                    <i class="fas fa-key me-2"></i>Verify Backup Code
+                                </button>
+                            </form>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Resend Code -->
+                        <div class="text-center">
+                            <p class="text-muted mb-2">Didn't receive the code?</p>
+                            <button id="resendCodeBtn" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-envelope me-1"></i>Resend Code
+                            </button>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <a href="/login" class="text-decoration-none text-muted">
+                                <i class="fas fa-arrow-left me-1"></i>Back to Login
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Tips Card -->
+                <div class="card border-0 shadow-sm mt-3">
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-3">
+                            <i class="fas fa-info-circle text-primary me-2"></i>Security Tips
+                        </h6>
+                        <ul class="small text-muted mb-0">
+                            <li>Never share your verification code with anyone</li>
+                            <li>PowerShare will never ask for your code via phone or text</li>
+                            <li>Keep your backup codes in a safe place</li>
+                            <li>Only trust devices you own and control</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto-focus and format code input
+    const codeInput = document.getElementById('code');
+    const backupCodeInput = document.getElementById('backupCode');
+
+    codeInput.focus();
+
+    // Only allow numbers in verification code
+    codeInput.addEventListener('input', function(e) {
+        this.value = this.value.replace(/[^0-9]/g, '');
+    });
+
+    // Auto-uppercase backup code
+    backupCodeInput.addEventListener('input', function(e) {
+        this.value = this.value.toUpperCase();
+    });
+
+    // Handle 2FA Code Verification
+    document.getElementById('verify2faForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const code = document.getElementById('code').value;
+        const userId = document.getElementById('userId').value;
+        const rememberDevice = document.getElementById('rememberDevice').checked;
+        const verifyBtn = document.getElementById('verifyBtn');
+        const errorDiv = document.getElementById('errorMessage');
+
+        if (code.length !== 6) {
+            errorDiv.textContent = 'Please enter a 6-digit code';
+            errorDiv.classList.remove('d-none');
+            return;
+        }
+
+        verifyBtn.disabled = true;
+        verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Verifying...';
+
+        try {
+            const response = await fetch('/api/auth/2fa/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: parseInt(userId),
+                    code,
+                    rememberDevice
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Redirect based on user role
+                const user = result.data.user;
+                if (user.role === 'admin') {
+                    window.location.href = '/admin/dashboard';
+                } else if (user.role === 'owner') {
+                    window.location.href = '/owner/dashboard';
+                } else {
+                    window.location.href = '/dashboard';
+                }
+            } else {
+                errorDiv.textContent = result.message || 'Invalid or expired code';
+                errorDiv.classList.remove('d-none');
+                verifyBtn.disabled = false;
+                verifyBtn.innerHTML = '<i class="fas fa-check-circle me-2"></i>Verify & Continue';
+                codeInput.value = '';
+                codeInput.focus();
+            }
+        } catch (error) {
+            console.error('Verification error:', error);
+            errorDiv.textContent = 'Verification failed. Please try again.';
+            errorDiv.classList.remove('d-none');
+            verifyBtn.disabled = false;
+            verifyBtn.innerHTML = '<i class="fas fa-check-circle me-2"></i>Verify & Continue';
+        }
+    });
+
+    // Handle Backup Code Verification
+    document.getElementById('verifyBackupForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const backupCode = document.getElementById('backupCode').value;
+        const userId = document.getElementById('userId').value;
+        const errorDiv = document.getElementById('backupErrorMessage');
+
+        if (backupCode.length !== 8) {
+            errorDiv.textContent = 'Please enter an 8-character backup code';
+            errorDiv.classList.remove('d-none');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/auth/2fa/verify-backup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: parseInt(userId),
+                    backupCode
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Redirect based on user role
+                const user = result.data.user;
+                if (user.role === 'admin') {
+                    window.location.href = '/admin/dashboard';
+                } else if (user.role === 'owner') {
+                    window.location.href = '/owner/dashboard';
+                } else {
+                    window.location.href = '/dashboard';
+                }
+            } else {
+                errorDiv.textContent = result.message || 'Invalid backup code';
+                errorDiv.classList.remove('d-none');
+                backupCodeInput.value = '';
+                backupCodeInput.focus();
+            }
+        } catch (error) {
+            console.error('Backup verification error:', error);
+            errorDiv.textContent = 'Verification failed. Please try again.';
+            errorDiv.classList.remove('d-none');
+        }
+    });
+
+    // Resend Code
+    document.getElementById('resendCodeBtn').addEventListener('click', async function() {
+        const userId = document.getElementById('userId').value;
+        this.disabled = true;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Sending...';
+
+        try {
+            // This would require a new endpoint - for now, redirect to login
+            alert('Please log in again to receive a new code.');
+            window.location.href = '/login';
+        } catch (error) {
+            console.error('Resend error:', error);
+            this.disabled = false;
+            this.innerHTML = '<i class="fas fa-envelope me-1"></i>Resend Code';
+        }
+    });
+</script>
+
+<style>
+    .min-vh-100 {
+        min-height: 100vh;
+    }
+
+    .card {
+        border-radius: 15px;
+    }
+
+    #code:focus, #backupCode:focus {
+        border-color: #ef4444;
+        box-shadow: 0 0 0 0.25rem rgba(239, 68, 68, 0.25);
+    }
+</style>
+
+<%- include('partials/footer') %>

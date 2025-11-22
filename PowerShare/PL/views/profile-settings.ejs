@@ -142,6 +142,63 @@
                                     <i class="fas fa-key me-2"></i>Change Password
                                 </button>
                             </form>
+
+                            <hr class="my-4">
+
+                            <h6 class="fw-bold mb-3">Two-Factor Authentication (2FA)</h6>
+                            <p class="text-muted small mb-3">
+                                Add an extra layer of security to your account. When enabled, you'll need to enter a code sent to your email in addition to your password.
+                            </p>
+
+                            <div id="twoFactorStatus" class="mb-3">
+                                <div class="d-flex align-items-center justify-content-between p-3 border rounded">
+                                    <div>
+                                        <strong id="twoFactorStatusText">Loading...</strong>
+                                        <small class="d-block text-muted" id="twoFactorStatusDescription"></small>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="twoFactorToggle" style="width: 3rem; height: 1.5rem;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="backupCodesSection" class="d-none">
+                                <div class="alert alert-warning">
+                                    <h6 class="fw-bold mb-2">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>Save Your Backup Codes
+                                    </h6>
+                                    <p class="small mb-2">Store these codes in a safe place. Each code can only be used once.</p>
+                                    <div id="backupCodesList" class="font-monospace small bg-white p-3 rounded border">
+                                        <!-- Backup codes will be displayed here -->
+                                    </div>
+                                    <button class="btn btn-sm btn-secondary mt-2" onclick="printBackupCodes()">
+                                        <i class="fas fa-print me-1"></i>Print Codes
+                                    </button>
+                                    <button class="btn btn-sm btn-success mt-2" onclick="downloadBackupCodes()">
+                                        <i class="fas fa-download me-1"></i>Download Codes
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="disableTwoFactorSection" class="d-none">
+                                <div class="alert alert-danger">
+                                    <h6 class="fw-bold mb-2">
+                                        <i class="fas fa-shield-alt me-2"></i>Disable Two-Factor Authentication
+                                    </h6>
+                                    <p class="small mb-3">Enter your password to confirm disabling 2FA.</p>
+                                    <form id="disableTwoFactorForm">
+                                        <div class="mb-3">
+                                            <input type="password" class="form-control" id="disable2FAPassword" placeholder="Enter your password" required>
+                                        </div>
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                            <i class="fas fa-times-circle me-1"></i>Disable 2FA
+                                        </button>
+                                        <button type="button" class="btn btn-secondary btn-sm" onclick="cancelDisable2FA()">
+                                            Cancel
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -509,8 +566,159 @@
         }
     }
 
+    // Two-Factor Authentication Functions
+    let backupCodesData = [];
+
+    async function load2FAStatus() {
+        try {
+            const response = await fetch('/api/auth/2fa/status', {
+                credentials: 'include'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                const { enabled, backupCodesRemaining } = result.data;
+                const toggle = document.getElementById('twoFactorToggle');
+                const statusText = document.getElementById('twoFactorStatusText');
+                const statusDesc = document.getElementById('twoFactorStatusDescription');
+
+                toggle.checked = enabled;
+
+                if (enabled) {
+                    statusText.textContent = 'Two-Factor Authentication Enabled';
+                    statusText.className = 'text-success';
+                    statusDesc.textContent = `${backupCodesRemaining} backup codes remaining`;
+                } else {
+                    statusText.textContent = 'Two-Factor Authentication Disabled';
+                    statusText.className = '';
+                    statusDesc.textContent = 'Enable for extra security';
+                }
+            }
+        } catch (error) {
+            console.error('Load 2FA status error:', error);
+        }
+    }
+
+    document.getElementById('twoFactorToggle').addEventListener('change', async function() {
+        const isEnabled = this.checked;
+
+        if (isEnabled) {
+            // Enable 2FA
+            if (!confirm('Enable Two-Factor Authentication? You will receive a code via email each time you log in.')) {
+                this.checked = false;
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/2fa/enable', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Show backup codes
+                    backupCodesData = result.data.backupCodes;
+                    displayBackupCodes(result.data.backupCodes);
+                    document.getElementById('backupCodesSection').classList.remove('d-none');
+
+                    alert('Two-Factor Authentication enabled successfully! Please save your backup codes.');
+                    await load2FAStatus();
+                } else {
+                    alert('Failed to enable 2FA: ' + result.message);
+                    this.checked = false;
+                }
+            } catch (error) {
+                console.error('Enable 2FA error:', error);
+                alert('Failed to enable 2FA. Please try again.');
+                this.checked = false;
+            }
+        } else {
+            // Show disable form
+            this.checked = true; // Keep it checked until password is verified
+            document.getElementById('disableTwoFactorSection').classList.remove('d-none');
+        }
+    });
+
+    function displayBackupCodes(codes) {
+        const codesList = document.getElementById('backupCodesList');
+        codesList.innerHTML = codes.map((code, index) =>
+            `<div class="mb-1">${index + 1}. ${code}</div>`
+        ).join('');
+    }
+
+    function printBackupCodes() {
+        const printWindow = window.open('', '', 'height=600,width=800');
+        printWindow.document.write('<html><head><title>PowerShare - Backup Codes</title>');
+        printWindow.document.write('<style>body { font-family: monospace; padding: 20px; }</style>');
+        printWindow.document.write('</head><body>');
+        printWindow.document.write('<h2>PowerShare - Two-Factor Authentication Backup Codes</h2>');
+        printWindow.document.write('<p>Store these codes in a safe place. Each code can only be used once.</p>');
+        printWindow.document.write('<ul>');
+        backupCodesData.forEach((code, index) => {
+            printWindow.document.write(`<li>${code}</li>`);
+        });
+        printWindow.document.write('</ul>');
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+        printWindow.print();
+    }
+
+    function downloadBackupCodes() {
+        const text = 'PowerShare - Two-Factor Authentication Backup Codes\n\n' +
+                     'Store these codes in a safe place. Each code can only be used once.\n\n' +
+                     backupCodesData.map((code, index) => `${index + 1}. ${code}`).join('\n');
+
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'powershare-backup-codes.txt';
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+
+    function cancelDisable2FA() {
+        document.getElementById('disableTwoFactorSection').classList.add('d-none');
+        document.getElementById('disable2FAPassword').value = '';
+    }
+
+    document.getElementById('disableTwoFactorForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const password = document.getElementById('disable2FAPassword').value;
+
+        try {
+            const response = await fetch('/api/auth/2fa/disable', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ password })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('Two-Factor Authentication disabled successfully');
+                document.getElementById('twoFactorToggle').checked = false;
+                document.getElementById('disableTwoFactorSection').classList.add('d-none');
+                document.getElementById('backupCodesSection').classList.add('d-none');
+                await load2FAStatus();
+            } else {
+                alert('Failed to disable 2FA: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Disable 2FA error:', error);
+            alert('Failed to disable 2FA. Please try again.');
+        }
+    });
+
     document.addEventListener('DOMContentLoaded', function() {
         loadNotificationPreferences();
+        load2FAStatus();
 
         const darkModeToggle = document.getElementById('darkModeToggle');
         if (darkModeToggle) {

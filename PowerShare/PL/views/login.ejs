@@ -137,6 +137,13 @@
                 setTimeout(() => {
                     window.location.href = '/dashboard';
                 }, 1000);
+            } else if (result.requiresTwoFactor) {
+                // 2FA is required, redirect to verification page
+                showAlert('Verification code sent to your email', 'info');
+
+                setTimeout(() => {
+                    window.location.href = `/verify-2fa?userId=${result.userId}`;
+                }, 1500);
             } else {
                 showAlert(result.message || 'Login failed', 'danger');
                 submitBtn.disabled = false;
