@@ -10,9 +10,15 @@ const {
     resetPasswordValidation,
     validate
 } = require('../middleware/validator');
+const {
+    loginLimiter,
+    registerLimiter,
+    passwordResetLimiter,
+    twoFactorLimiter
+} = require('../middleware/rateLimiter');
 
-router.post('/register', upload.single('profile_image'), registerValidation, validate, authController.register);
-router.post('/login', loginValidation, validate, authController.login);
+router.post('/register', registerLimiter, upload.single('profile_image'), registerValidation, validate, authController.register);
+router.post('/login', loginLimiter, loginValidation, validate, authController.login);
 
 router.post('/logout', authenticate, authController.logout);
 router.get('/me', authenticate, authController.getCurrentUser);
@@ -24,8 +30,8 @@ router.get('/verify-email', authController.verifyEmail);
 router.post('/resend-verification', authController.resendVerificationEmail);
 
 // Two-Factor Authentication
-router.post('/2fa/verify', authController.verifyTwoFactor);
-router.post('/2fa/verify-backup', authController.verifyBackupCode);
+router.post('/2fa/verify', twoFactorLimiter, authController.verifyTwoFactor);
+router.post('/2fa/verify-backup', twoFactorLimiter, authController.verifyBackupCode);
 router.post('/2fa/enable', authenticate, authController.enableTwoFactor);
 router.post('/2fa/disable', authenticate, authController.disableTwoFactor);
 router.get('/2fa/status', authenticate, authController.getTwoFactorStatus);

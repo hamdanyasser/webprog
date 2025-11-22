@@ -104,10 +104,22 @@ function showNotification(message, type = 'success') {
     const notification = document.createElement('div');
     notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
     notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-    notification.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
+
+    // Create message text node (XSS safe)
+    const messageSpan = document.createElement('span');
+    messageSpan.textContent = message;
+    notification.appendChild(messageSpan);
+
+    // Add space
+    notification.appendChild(document.createTextNode(' '));
+
+    // Create close button
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'btn-close';
+    closeBtn.setAttribute('data-bs-dismiss', 'alert');
+    closeBtn.setAttribute('aria-label', 'Close');
+    notification.appendChild(closeBtn);
 
     document.body.appendChild(notification);
 
@@ -134,7 +146,13 @@ function updatePaymentStatus(invoiceId, status) {
         const statusBadge = invoiceRow.querySelector('.badge');
         if (statusBadge) {
             statusBadge.className = 'badge bg-success';
-            statusBadge.innerHTML = '<i class="fas fa-check me-1"></i>Paid';
+            // Create icon element
+            const icon = document.createElement('i');
+            icon.className = 'fas fa-check me-1';
+            // Clear and add elements (XSS safe)
+            statusBadge.textContent = '';
+            statusBadge.appendChild(icon);
+            statusBadge.appendChild(document.createTextNode('Paid'));
         }
     }
 }
@@ -441,7 +459,13 @@ function showLoading() {
     loader.className = 'position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center';
     loader.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
     loader.style.zIndex = '9999';
-    loader.innerHTML = '<div class="spinner-border text-light" role="status"></div>';
+
+    // Create spinner element (XSS safe)
+    const spinner = document.createElement('div');
+    spinner.className = 'spinner-border text-light';
+    spinner.setAttribute('role', 'status');
+    loader.appendChild(spinner);
+
     document.body.appendChild(loader);
 }
 

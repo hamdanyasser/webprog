@@ -15,6 +15,7 @@ const pricingPlanRoutes = require('./pricingPlans');
 const adminRoutes = require('./admin');
 const loyaltyRoutes = require('./loyalty');
 const walletRoutes = require('./wallet');
+const capacityRoutes = require('./capacity');
 
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
@@ -30,5 +31,6 @@ router.use('/pricing-plans', pricingPlanRoutes);
 router.use('/admin', adminRoutes);
 router.use('/loyalty', loyaltyRoutes);
 router.use('/wallet', walletRoutes);
+router.use('/capacity', capacityRoutes);
 
 module.exports = router;
