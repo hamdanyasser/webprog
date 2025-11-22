@@ -71,6 +71,13 @@ router.get('/notifications', authenticateView, (req, res) => {
     });
 });
 
+router.get('/notification-preferences', authenticateView, (req, res) => {
+    res.render('notification-preferences', {
+        title: 'Notification Preferences - PowerShare',
+        user: req.user
+    });
+});
+
 router.get('/profile', authenticateView, (req, res) => {
     res.render('profile-settings', {
         title: 'Profile Settings - PowerShare',

@@ -2,15 +2,30 @@ const db = require('./dbConnection');
 
 class NotificationDAL {
     async createNotification(notificationData) {
-        const { user_id, title, message, type } = notificationData;
+        const {
+            user_id,
+            title,
+            message,
+            type = 'system',
+            action_url = null,
+            icon = null
+        } = notificationData;
 
         const [result] = await db.execute(
-            `INSERT INTO notifications (user_id, title, message, type) 
-             VALUES (?, ?, ?, ?)`,
-            [user_id, title, message, type]
+            `INSERT INTO notifications (user_id, title, message, type, action_url, icon)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [user_id, title, message, type, action_url, icon]
         );
 
-        return result.insertId;
+        const notificationId = result.insertId;
+
+        // Return the full notification object for real-time broadcasting
+        const [rows] = await db.execute(
+            `SELECT * FROM notifications WHERE notification_id = ?`,
+            [notificationId]
+        );
+
+        return rows[0];
     }
 
     async getByUserId(userId, limit = 50) {
@@ -34,22 +49,52 @@ class NotificationDAL {
         return rows;
     }
 
-    async markAsRead(notificationId) {
-        await db.execute(
-            'UPDATE notifications SET is_read = TRUE WHERE notification_id = ?',
-            [notificationId]
-        );
+    async markAsRead(notificationId, userId = null) {
+        const now = new Date();
+
+        if (userId) {
+            // Verify ownership before marking as read
+            await db.execute(
+                `UPDATE notifications
+                 SET is_read = TRUE, read_at = ?
+                 WHERE notification_id = ? AND user_id = ?`,
+                [now, notificationId, userId]
+            );
+        } else {
+            await db.execute(
+                `UPDATE notifications
+                 SET is_read = TRUE, read_at = ?
+                 WHERE notification_id = ?`,
+                [now, notificationId]
+            );
+        }
     }
 
     async markAllAsRead(userId) {
+        const now = new Date();
+
         await db.execute(
-            'UPDATE notifications SET is_read = TRUE WHERE user_id = ?',
-            [userId]
+            `UPDATE notifications
+             SET is_read = TRUE, read_at = ?
+             WHERE user_id = ? AND is_read = FALSE`,
+            [now, userId]
         );
     }
 
-    async deleteNotification(notificationId) {
-        await db.execute('DELETE FROM notifications WHERE notification_id = ?', [notificationId]);
+    async deleteNotification(notificationId, userId = null) {
+        if (userId) {
+            // Verify ownership before deleting
+            await db.execute(
+                `DELETE FROM notifications
+                 WHERE notification_id = ? AND user_id = ?`,
+                [notificationId, userId]
+            );
+        } else {
+            await db.execute(
+                `DELETE FROM notifications WHERE notification_id = ?`,
+                [notificationId]
+            );
+        }
     }
 
     async deleteAllByUserId(userId) {

@@ -1,0 +1,38 @@
+<!-- Notification Center Component -->
+<link rel="stylesheet" href="/css/notifications.css">
+
+<li class="nav-item dropdown notification-bell">
+    <a class="nav-link position-relative" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fas fa-bell"></i>
+        <span class="badge bg-danger" id="notification-badge" style="display: none;">0</span>
+    </a>
+    <div class="dropdown-menu dropdown-menu-end notification-dropdown" aria-labelledby="notificationDropdown">
+        <!-- Header -->
+        <div class="dropdown-header">
+            <h6>Notifications</h6>
+            <a href="#" class="mark-all-read" onclick="event.preventDefault(); notificationCenter.markAllAsReadViaSocket()">
+                Mark all read
+            </a>
+        </div>
+
+        <!-- Notification List -->
+        <div id="notification-list">
+            <div class="notification-loading">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="dropdown-item text-center border-top">
+            <a href="/notifications" class="text-decoration-none">View All Notifications</a>
+        </div>
+    </div>
+</li>
+
+<!-- Socket.IO Client Library -->
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+<!-- Notification Center Script -->
+<script src="/js/notificationCenter.js"></script>

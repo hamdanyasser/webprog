@@ -401,6 +401,89 @@ class EmailService {
 </html>
         `;
     }
+
+    /**
+     * Send generic notification email
+     */
+    async sendNotificationEmail(userEmail, userName, title, message, actionUrl = null) {
+        const mailOptions = {
+            from: `"PowerShare" <${process.env.SMTP_USER}>`,
+            to: userEmail,
+            subject: `🔔 ${title} - PowerShare`,
+            html: this.getNotificationEmailTemplate(userName, title, message, actionUrl)
+        };
+
+        try {
+            const info = await this.transporter.sendMail(mailOptions);
+            console.log('✅ Notification email sent:', info.messageId);
+            return { success: true, messageId: info.messageId };
+        } catch (error) {
+            console.error('❌ Error sending notification email:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * Get generic notification email template
+     */
+    getNotificationEmailTemplate(userName, title, message, actionUrl) {
+        const actionButton = actionUrl
+            ? `<a href="${actionUrl}" style="display:inline-block;padding:12px 30px;margin:20px 0;background-color:#007bff;color:#ffffff;text-decoration:none;border-radius:5px;font-weight:bold;">View Details</a>`
+            : '';
+
+        return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
+</head>
+<body style="margin:0;padding:0;font-family:Arial,sans-serif;background-color:#f4f4f4;">
+    <table role="presentation" style="width:100%;border-collapse:collapse;">
+        <tr>
+            <td align="center" style="padding:40px 0;">
+                <table role="presentation" style="width:600px;border-collapse:collapse;background-color:#ffffff;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="padding:40px 40px 20px;text-align:center;background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <h1 style="margin:0;color:#ffffff;font-size:28px;">⚡ PowerShare</h1>
+                        </td>
+                    </tr>
+
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding:40px;">
+                            <h2 style="margin:0 0 20px;color:#333333;font-size:24px;">${title}</h2>
+                            <p style="margin:0 0 10px;color:#666666;font-size:16px;line-height:24px;">
+                                Hi <strong>${userName}</strong>,
+                            </p>
+                            <p style="margin:20px 0;color:#666666;font-size:16px;line-height:24px;">
+                                ${message}
+                            </p>
+                            ${actionButton}
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding:30px 40px;background-color:#f8f9fa;border-top:1px solid #e9ecef;">
+                            <p style="margin:0 0 10px;color:#666666;font-size:14px;text-align:center;">
+                                Thank you for using PowerShare
+                            </p>
+                            <p style="margin:0;color:#999999;font-size:12px;text-align:center;">
+                                This is an automated message, please do not reply to this email.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+        `;
+    }
 }
 
 module.exports = new EmailService();

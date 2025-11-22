@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('partials/head') %>
+    <title>Notification Preferences - PowerShare</title>
+</head>
+<body>
+    <%- include('partials/navbar') %>
+
+    <div class="container my-5">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h2 mb-0">🔔 Notification Preferences</h1>
+                <p class="text-muted">Manage how you receive notifications from PowerShare</p>
+            </div>
+            <a href="/profile" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Profile
+            </a>
+        </div>
+
+        <!-- Alert Container -->
+        <div id="alert-container"></div>
+
+        <!-- Notification Channels -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-paper-plane"></i> Notification Channels</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">Choose how you want to receive notifications</p>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="enable_in_app" checked>
+                            <label class="form-check-label" for="enable_in_app">
+                                <strong>In-App Notifications</strong><br>
+                                <small class="text-muted">Show notifications in the app</small>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="enable_email">
+                            <label class="form-check-label" for="enable_email">
+                                <strong>Email Notifications</strong><br>
+                                <small class="text-muted">Receive notifications via email</small>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="enable_push">
+                            <label class="form-check-label" for="enable_push">
+                                <strong>Browser Push Notifications</strong><br>
+                                <small class="text-muted">Get push notifications in your browser</small>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="enable_sms">
+                            <label class="form-check-label" for="enable_sms">
+                                <strong>SMS Notifications</strong><br>
+                                <small class="text-muted">Receive important alerts via SMS</small>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Types -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-list"></i> Notification Types</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">Select which types of notifications you want to receive</p>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="notify_bills" checked>
+                            <label class="form-check-label" for="notify_bills">
+                                💵 <strong>Bills</strong> - New bills and payment due reminders
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="notify_payments" checked>
+                            <label class="form-check-label" for="notify_payments">
+                                ✅ <strong>Payments</strong> - Payment confirmations and receipts
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="notify_outages" checked>
+                            <label class="form-check-label" for="notify_outages">
+                                ⚡ <strong>Outages</strong> - Power outage alerts and updates
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="notify_loyalty" checked>
+                            <label class="form-check-label" for="notify_loyalty">
+                                ⭐ <strong>Loyalty & Rewards</strong> - Points earned and rewards
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="notify_subscriptions" checked>
+                            <label class="form-check-label" for="notify_subscriptions">
+                                📦 <strong>Subscriptions</strong> - Subscription changes and renewals
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="notify_reminders" checked>
+                            <label class="form-check-label" for="notify_reminders">
+                                ⏰ <strong>Reminders</strong> - Payment reminders and alerts
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="notify_system" checked>
+                            <label class="form-check-label" for="notify_system">
+                                ℹ️ <strong>System</strong> - Platform updates and announcements
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiet Hours -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-moon"></i> Quiet Hours</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">Set quiet hours when you don't want to receive notifications</p>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="quiet_hours_enabled">
+                            <label class="form-check-label" for="quiet_hours_enabled">
+                                <strong>Enable Quiet Hours</strong>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Start Time</label>
+                        <input type="time" class="form-control" id="quiet_hours_start" value="22:00">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">End Time</label>
+                        <input type="time" class="form-control" id="quiet_hours_end" value="08:00">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Notification -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-vial"></i> Test Notifications</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">Send a test notification to verify your settings</p>
+                <button type="button" class="btn btn-info" onclick="sendTestNotification()">
+                    <i class="fas fa-paper-plane"></i> Send Test Notification
+                </button>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="text-end mb-4">
+            <button type="button" class="btn btn-secondary me-2" onclick="loadPreferences()">
+                <i class="fas fa-undo"></i> Reset
+            </button>
+            <button type="button" class="btn btn-primary" onclick="savePreferences()">
+                <i class="fas fa-save"></i> Save Preferences
+            </button>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>
+
+    <script>
+        let currentPreferences = {};
+
+        // Load preferences on page load
+        async function loadPreferences() {
+            try {
+                const response = await fetch('/api/notification-preferences/preferences', {
+                    credentials: 'include'
+                });
+
+                if (!response.ok) throw new Error('Failed to load preferences');
+
+                const data = await response.json();
+                currentPreferences = data.data;
+
+                // Populate form fields
+                document.getElementById('enable_in_app').checked = currentPreferences.enable_in_app;
+                document.getElementById('enable_email').checked = currentPreferences.enable_email;
+                document.getElementById('enable_push').checked = currentPreferences.enable_push;
+                document.getElementById('enable_sms').checked = currentPreferences.enable_sms;
+
+                document.getElementById('notify_bills').checked = currentPreferences.notify_bills;
+                document.getElementById('notify_payments').checked = currentPreferences.notify_payments;
+                document.getElementById('notify_outages').checked = currentPreferences.notify_outages;
+                document.getElementById('notify_loyalty').checked = currentPreferences.notify_loyalty;
+                document.getElementById('notify_subscriptions').checked = currentPreferences.notify_subscriptions;
+                document.getElementById('notify_reminders').checked = currentPreferences.notify_reminders;
+                document.getElementById('notify_system').checked = currentPreferences.notify_system;
+
+                document.getElementById('quiet_hours_enabled').checked = currentPreferences.quiet_hours_enabled;
+                if (currentPreferences.quiet_hours_start) {
+                    document.getElementById('quiet_hours_start').value = currentPreferences.quiet_hours_start;
+                }
+                if (currentPreferences.quiet_hours_end) {
+                    document.getElementById('quiet_hours_end').value = currentPreferences.quiet_hours_end;
+                }
+
+                showAlert('Preferences loaded successfully', 'success');
+            } catch (error) {
+                console.error('Error loading preferences:', error);
+                showAlert('Failed to load preferences', 'danger');
+            }
+        }
+
+        // Save preferences
+        async function savePreferences() {
+            try {
+                const preferences = {
+                    enable_in_app: document.getElementById('enable_in_app').checked,
+                    enable_email: document.getElementById('enable_email').checked,
+                    enable_push: document.getElementById('enable_push').checked,
+                    enable_sms: document.getElementById('enable_sms').checked,
+
+                    notify_bills: document.getElementById('notify_bills').checked,
+                    notify_payments: document.getElementById('notify_payments').checked,
+                    notify_outages: document.getElementById('notify_outages').checked,
+                    notify_loyalty: document.getElementById('notify_loyalty').checked,
+                    notify_subscriptions: document.getElementById('notify_subscriptions').checked,
+                    notify_reminders: document.getElementById('notify_reminders').checked,
+                    notify_system: document.getElementById('notify_system').checked,
+
+                    quiet_hours_enabled: document.getElementById('quiet_hours_enabled').checked,
+                    quiet_hours_start: document.getElementById('quiet_hours_start').value,
+                    quiet_hours_end: document.getElementById('quiet_hours_end').value
+                };
+
+                const response = await fetch('/api/notification-preferences/preferences', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(preferences),
+                    credentials: 'include'
+                });
+
+                if (!response.ok) throw new Error('Failed to save preferences');
+
+                showAlert('Preferences saved successfully!', 'success');
+
+                // If push is enabled, request permission
+                if (preferences.enable_push) {
+                    await requestPushPermission();
+                }
+            } catch (error) {
+                console.error('Error saving preferences:', error);
+                showAlert('Failed to save preferences', 'danger');
+            }
+        }
+
+        // Request push notification permission
+        async function requestPushPermission() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    showAlert('Push notifications enabled successfully!', 'success');
+                }
+            }
+        }
+
+        // Send test notification
+        async function sendTestNotification() {
+            try {
+                const response = await fetch('/api/notification-preferences/test', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+
+                if (!response.ok) throw new Error('Failed to send test notification');
+
+                showAlert('Test notification sent! Check your notification center.', 'success');
+            } catch (error) {
+                console.error('Error sending test notification:', error);
+                showAlert('Failed to send test notification', 'danger');
+            }
+        }
+
+        // Show alert
+        function showAlert(message, type) {
+            const container = document.getElementById('alert-container');
+            container.innerHTML = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+
+        // Load preferences on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPreferences();
+        });
+    </script>
+</body>
+</html>
