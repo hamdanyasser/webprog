@@ -88,7 +88,7 @@ class BillDAL {
 
     async getOverdueBills() {
         const [rows] = await db.execute(
-            `SELECT b.*, 
+            `SELECT b.*,
                     u.full_name as user_name, u.email,
                     g.generator_name
              FROM bills b
@@ -96,6 +96,51 @@ class BillDAL {
              JOIN users u ON s.user_id = u.user_id
              JOIN generators g ON s.generator_id = g.generator_id
              WHERE b.status = 'pending' AND b.due_date < CURRENT_DATE()`
+        );
+        return rows;
+    }
+
+    async updateBillPointsDiscount(billId, pointsRedeemed, discountAmount) {
+        await db.execute(
+            `UPDATE bills
+             SET points_redeemed = ?, points_discount_amount = ?
+             WHERE bill_id = ?`,
+            [pointsRedeemed, discountAmount, billId]
+        );
+    }
+
+    async applyEarlyPaymentDiscount(billId, discountAmount) {
+        await db.execute(
+            `UPDATE bills
+             SET early_payment_discount = ?
+             WHERE bill_id = ?`,
+            [discountAmount, billId]
+        );
+    }
+
+    async applyLatePaymentFee(billId, feeAmount) {
+        await db.execute(
+            `UPDATE bills
+             SET late_payment_fee = ?, status = 'overdue'
+             WHERE bill_id = ?`,
+            [feeAmount, billId]
+        );
+    }
+
+    async getBillsDueForLateFee(gracePeriodDays) {
+        const [rows] = await db.execute(
+            `SELECT b.*,
+                    s.user_id,
+                    u.full_name as user_name, u.email,
+                    g.generator_name
+             FROM bills b
+             JOIN subscriptions s ON b.subscription_id = s.subscription_id
+             JOIN users u ON s.user_id = u.user_id
+             JOIN generators g ON s.generator_id = g.generator_id
+             WHERE b.status = 'pending'
+               AND b.late_payment_fee = 0
+               AND DATEDIFF(CURRENT_DATE(), b.due_date) >= ?`,
+            [gracePeriodDays]
         );
         return rows;
     }

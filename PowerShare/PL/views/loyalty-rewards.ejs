@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('partials/head') %>
+    <title>Loyalty Rewards - PowerShare</title>
+    <style>
+        .tier-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.875rem;
+        }
+        .tier-bronze { background: linear-gradient(135deg, #CD7F32, #B87333); color: white; }
+        .tier-silver { background: linear-gradient(135deg, #C0C0C0, #A8A8A8); color: white; }
+        .tier-gold { background: linear-gradient(135deg, #FFD700, #FFA500); color: white; }
+
+        .points-circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366F1, #8B5CF6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+            margin: 0 auto;
+            box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);
+        }
+
+        .points-circle h2 {
+            font-size: 3rem;
+            margin: 0;
+            font-weight: bold;
+        }
+
+        .points-circle p {
+            margin: 0;
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        .progress-bar-wrapper {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6366F1, #8B5CF6);
+            transition: width 0.5s ease;
+        }
+
+        .transaction-item {
+            border-left: 3px solid #6366F1;
+            padding-left: 1rem;
+        }
+
+        .transaction-item.earned {
+            border-left-color: #10B981;
+        }
+
+        .transaction-item.redeemed {
+            border-left-color: #EF4444;
+        }
+
+        .points-positive {
+            color: #10B981;
+            font-weight: bold;
+        }
+
+        .points-negative {
+            color: #EF4444;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <%- include('partials/navbar') %>
+
+    <div class="container my-5">
+        <!-- Header -->
+        <div class="text-center mb-5">
+            <h1 class="display-4 fw-bold">🎁 Loyalty Rewards</h1>
+            <p class="text-muted">Earn points, unlock rewards, and enjoy exclusive benefits</p>
+        </div>
+
+        <!-- Points Overview -->
+        <div class="row mb-5">
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <div class="points-circle" id="points-circle">
+                            <h2 id="points-balance">-</h2>
+                            <p>POINTS</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Your Tier</h5>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <span class="tier-badge" id="current-tier-badge">Loading...</span>
+                                <p class="mt-2 mb-0 text-muted" id="tier-benefits">-</p>
+                            </div>
+                        </div>
+
+                        <!-- Progress to Next Tier -->
+                        <div id="next-tier-section" class="mt-4" style="display: none;">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Progress to <strong id="next-tier-name">-</strong></span>
+                                <span class="text-muted"><span id="points-needed">-</span> points needed</span>
+                            </div>
+                            <div class="progress-bar-wrapper">
+                                <div class="progress-bar-fill" id="tier-progress-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Earning Summary</h5>
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <h3 class="text-success" id="total-earned">-</h3>
+                                <p class="text-muted small mb-0">Total Earned</p>
+                            </div>
+                            <div class="col-4">
+                                <h3 class="text-danger" id="total-redeemed">-</h3>
+                                <p class="text-muted small mb-0">Total Redeemed</p>
+                            </div>
+                            <div class="col-4">
+                                <h3 class="text-primary" id="total-transactions">-</h3>
+                                <p class="text-muted small mb-0">Transactions</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- How It Works -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title">💡 How It Works</h5>
+                <div class="row">
+                    <div class="col-md-3 text-center mb-3">
+                        <div class="display-6">💳</div>
+                        <h6>Make Payments</h6>
+                        <p class="small text-muted">Earn <span id="points-per-dollar">1</span> point per $1 spent</p>
+                    </div>
+                    <div class="col-md-3 text-center mb-3">
+                        <div class="display-6">⚡</div>
+                        <h6>Pay Early</h6>
+                        <p class="small text-muted">Get extra discount for early payments</p>
+                    </div>
+                    <div class="col-md-3 text-center mb-3">
+                        <div class="display-6">🎁</div>
+                        <h6>Redeem Points</h6>
+                        <p class="small text-muted">Use points to reduce your bills</p>
+                    </div>
+                    <div class="col-md-3 text-center mb-3">
+                        <div class="display-6">🏆</div>
+                        <h6>Level Up</h6>
+                        <p class="small text-muted">Unlock tiers for better rewards</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Recent Activity</h5>
+            </div>
+            <div class="card-body">
+                <div id="transactions-list">
+                    <div class="text-center text-muted py-4">
+                        <div class="spinner-border spinner-border-sm" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading transactions...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>
+
+    <script src="/js/api.js"></script>
+    <script>
+        let loyaltyData = null;
+
+        async function loadLoyaltyDashboard() {
+            try {
+                const response = await fetch('/api/loyalty/dashboard', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    credentials: 'include'
+                });
+
+                if (!response.ok) throw new Error('Failed to load loyalty data');
+
+                const data = await response.json();
+                loyaltyData = data.data;
+
+                updateUI();
+            } catch (error) {
+                console.error('Error loading loyalty dashboard:', error);
+                document.getElementById('transactions-list').innerHTML = `
+                    <div class="alert alert-danger">
+                        Failed to load loyalty data. Please try again.
+                    </div>
+                `;
+            }
+        }
+
+        function updateUI() {
+            // Points Balance
+            document.getElementById('points-balance').textContent = loyaltyData.balance.toLocaleString();
+
+            // Current Tier
+            const tier = loyaltyData.currentTier;
+            const tierBadge = document.getElementById('current-tier-badge');
+            tierBadge.textContent = tier.tier_name;
+            tierBadge.className = `tier-badge tier-${tier.tier_name.toLowerCase()}`;
+            document.getElementById('tier-benefits').textContent = tier.benefits_description;
+
+            // Next Tier
+            if (loyaltyData.nextTier) {
+                document.getElementById('next-tier-section').style.display = 'block';
+                document.getElementById('next-tier-name').textContent = loyaltyData.nextTier.tier_name;
+                document.getElementById('points-needed').textContent = loyaltyData.nextTier.points_needed.toLocaleString();
+
+                const progress = (loyaltyData.balance / loyaltyData.nextTier.min_points) * 100;
+                document.getElementById('tier-progress-bar').style.width = Math.min(progress, 100) + '%';
+            }
+
+            // Summary
+            document.getElementById('total-earned').textContent = loyaltyData.summary.total_earned.toLocaleString();
+            document.getElementById('total-redeemed').textContent = loyaltyData.summary.total_redeemed.toLocaleString();
+            document.getElementById('total-transactions').textContent = loyaltyData.summary.total_transactions;
+
+            // Settings
+            document.getElementById('points-per-dollar').textContent = loyaltyData.settings.pointsPerDollar;
+
+            // Transactions
+            renderTransactions(loyaltyData.recentTransactions);
+        }
+
+        function renderTransactions(transactions) {
+            const container = document.getElementById('transactions-list');
+
+            if (!transactions || transactions.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-muted py-4">
+                        <p>No transactions yet. Make a payment to start earning points!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = transactions.map(tx => `
+                <div class="transaction-item ${tx.transaction_type} mb-3 pb-3 border-bottom">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="mb-1">${tx.description || tx.transaction_type}</h6>
+                            <small class="text-muted">${new Date(tx.created_at).toLocaleString()}</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="${tx.points_amount > 0 ? 'points-positive' : 'points-negative'}">
+                                ${tx.points_amount > 0 ? '+' : ''}${tx.points_amount} pts
+                            </span>
+                            <br>
+                            <span class="badge bg-secondary small">${tx.transaction_type}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', loadLoyaltyDashboard);
+    </script>
+</body>
+</html>

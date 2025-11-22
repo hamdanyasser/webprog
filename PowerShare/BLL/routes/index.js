@@ -12,6 +12,7 @@ const notificationRoutes = require('./notifications');
 const subscriptionRoutes = require('./subscriptions');
 const pricingPlanRoutes = require('./pricingPlans');
 const adminRoutes = require('./admin');
+const loyaltyRoutes = require('./loyalty');
 
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
@@ -24,5 +25,6 @@ router.use('/notifications', notificationRoutes);
 router.use('/subscriptions', subscriptionRoutes);
 router.use('/pricing-plans', pricingPlanRoutes);
 router.use('/admin', adminRoutes);
+router.use('/loyalty', loyaltyRoutes);
 
 module.exports = router;

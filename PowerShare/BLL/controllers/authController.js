@@ -77,7 +77,7 @@ class AuthController {
             const userId = await userDAL.createUser({
                 full_name,
                 email,
-                password,
+                password: hashedPassword,
                 phone,
                 address,
                 role,

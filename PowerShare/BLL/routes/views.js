@@ -77,6 +77,12 @@ router.get('/generators', authenticateView, (req, res) => {
     });
 });
 
+router.get('/loyalty-rewards', authenticateView, (req, res) => {
+    res.render('loyalty-rewards', {
+        title: 'Loyalty Rewards - PowerShare',
+        user: req.user
+    });
+});
 
 router.get('/logout', (req, res) => {
     res.clearCookie('token', {
@@ -100,6 +106,16 @@ router.get('/admin/generators/:genId', authenticateView, (req, res) => {
         title: 'Generator Details - PowerShare',
         user: req.user,
         genId: req.params.genId
+    });
+});
+
+router.get('/admin/loyalty-settings', authenticateView, (req, res) => {
+    if (req.user.role !== 'admin') {
+        return res.status(403).send('Access denied. Admins only.');
+    }
+    res.render('admin-loyalty-settings', {
+        title: 'Loyalty Settings - PowerShare',
+        user: req.user
     });
 });
 
