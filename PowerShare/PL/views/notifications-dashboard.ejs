@@ -220,9 +220,7 @@
         <div class="pagination-container" id="pagination-container"></div>
     </div>
 
-    <%- include('partials/footer') %>
-
-    <script>
+<script>
         let currentPage = 1;
         let currentView = 'list';
         let selectedNotifications = new Set();
@@ -698,5 +696,5 @@
             return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
         }
     </script>
-</body>
-</html>
+
+<%- include('partials/footer') %>

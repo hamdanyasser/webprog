@@ -386,12 +386,6 @@
     </div>
 </div>
 
-<%- include('partials/footer') %>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script src="/js/script.js"></script>
-
 <script>
     function showSection(sectionName, event) {
         if (event) event.preventDefault();
@@ -1207,5 +1201,5 @@
         return str.charAt(0).toUpperCase() + str.slice(1);
     }
 </script>
-</body>
-</html>
+
+<%- include('partials/footer') %>
