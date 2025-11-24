@@ -195,10 +195,7 @@
         </div>
     </div>
 
-    <%- include('partials/footer') %>
-
-    <script src="/js/api.js"></script>
-    <script>
+<script>
         let loyaltyData = null;
 
         async function loadLoyaltyDashboard() {
@@ -293,5 +290,5 @@
         // Load data on page load
         document.addEventListener('DOMContentLoaded', loadLoyaltyDashboard);
     </script>
-</body>
-</html>
+
+<%- include('partials/footer') %>
